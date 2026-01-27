@@ -18,7 +18,7 @@ public class GameProperties {
   @Introspected
   @ConfigurationProperties("tick")
   public static class Tick {
-    private Boolean enabled = false;
+    private boolean enabled = false;
     private Long periodMs = 500L;
   }
 

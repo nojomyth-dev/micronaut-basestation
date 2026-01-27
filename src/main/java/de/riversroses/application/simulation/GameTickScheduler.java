@@ -24,7 +24,7 @@ public class GameTickScheduler {
 
   @Scheduled(fixedDelay = "${game.tick.periodMs:500}ms")
   void tick() {
-    if (!props.getTick().getEnabled()) return;
+    if (!props.getTick().isEnabled()) return;
 
     Instant now = Instant.now();
     shipService.all().forEach(ship -> {
