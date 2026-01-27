@@ -1,0 +1,27 @@
+micronaut:
+  application:
+    name: mission-control
+  server:
+    port: 8080
+
+# Game server config
+game:
+  tick:
+    enabled: true
+    periodMs: 500
+  physics:
+    fuelPerSecondAtSpeed1: 0.05
+    minSpeed: 0
+    maxSpeed: 500
+    respawnFuel: 800
+
+# Other stuff
+endpoints:
+  health:
+    enabled: true
+    sensitive: false
+
+micronaut:
+  serde:
+    deserialization:
+      fail-on-unknown-properties: true

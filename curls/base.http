@@ -1,0 +1,26 @@
+@base = http://localhost:8080
+@shipId = team-1
+
+###
+POST {{base}}/ships/register
+Content-Type: application/json
+
+{
+  "shipId": "{{shipId}}",
+  "teamName": "Team One"
+}
+
+###
+POST {{base}}/ships/me/{{shipId}}/course
+Content-Type: application/json
+
+{
+  "headingDeg": 0,
+  "speed": 200
+}
+
+###
+GET {{base}}/ships/me/{{shipId}}
+
+###
+GET {{base}}/world/snapshot
