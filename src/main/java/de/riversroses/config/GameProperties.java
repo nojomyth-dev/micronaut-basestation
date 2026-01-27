@@ -9,9 +9,14 @@ import io.micronaut.context.annotation.ConfigurationProperties;
 import io.micronaut.core.annotation.Introspected;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 @Introspected
 @ConfigurationProperties("game")
 public class GameProperties {
@@ -25,14 +30,20 @@ public class GameProperties {
   private List<Depot> depots = new ArrayList<>();
 
   @Data
+  @NoArgsConstructor
+  @AllArgsConstructor
   @Introspected
+  @ConfigurationProperties("tick")
   public static class Tick {
     private boolean enabled = false;
     private Long periodMs = 500L;
   }
 
   @Data
+  @NoArgsConstructor
+  @AllArgsConstructor
   @Introspected
+  @ConfigurationProperties("physics")
   public static class Physics {
     private Double fuelPerSecondAtSpeed1 = 0.05D;
     private Double fuelPerCargoUnit = 0.02D;
@@ -47,7 +58,10 @@ public class GameProperties {
   }
 
   @Data
+  @NoArgsConstructor
+  @AllArgsConstructor
   @Introspected
+  @ConfigurationProperties("home-base")
   public static class HomeBase {
     private Double x = 500D;
     private Double y = 500D;
@@ -55,7 +69,10 @@ public class GameProperties {
   }
 
   @Data
+  @NoArgsConstructor
+  @AllArgsConstructor
   @Introspected
+  @ConfigurationProperties("world")
   public static class World {
     private Double width = 1000D;
     private Double height = 1000D;
@@ -64,34 +81,32 @@ public class GameProperties {
 
     private Integer missions = 5;
 
-    private Map<String, OreConfig> ores = new HashMap<>();
-
-    // Fallback values
-    public World() {
-      ores.put("IRON", new OreConfig(70, 10));
-      ores.put("GOLD", new OreConfig(20, 50));
-      ores.put("DIAMOND", new OreConfig(10, 150));
-    }
-  }
-
-  @Data
-  @Introspected
-  public static class Scan {
-    private Double baseCost = 5.0D;
-    private Double costPerRadiusUnit = 0.05D;
-    private Double maxRadius = 800D;
+    private Map<String, Ore> ores = new HashMap<>();
   }
 
   @Data
   @NoArgsConstructor
   @AllArgsConstructor
   @Introspected
-  public static class OreConfig {
+  @ConfigurationProperties("scan")
+  public static class Scan {
+    private Double baseCost = 5.0D;
+    private Double costPerRadiusUnit = 0.05D;
+    private Double maxRadius = 800D;
+  }
+
+  @Getter
+  @NoArgsConstructor
+  @AllArgsConstructor
+  @Introspected
+  public static class Ore {
     private Integer weight;
     private Integer value;
   }
 
-  @Data
+  @Getter
+  @ToString
+  @EqualsAndHashCode
   @NoArgsConstructor
   @AllArgsConstructor
   @Introspected

@@ -106,7 +106,7 @@
                     <!-- Uncomment to enable incremental compilation -->
                     <!-- <useIncrementalCompilation>false</useIncrementalCompilation> -->
 
-                    <annotationProcessorPaths combine.children="append">
+                    <annotationProcessorPaths>
                         <path>
                             <groupId>org.projectlombok</groupId>
                             <artifactId>lombok</artifactId>
@@ -114,8 +114,13 @@
                         </path>
                         <path>
                             <groupId>io.micronaut</groupId>
-                            <artifactId>micronaut-http-validation</artifactId>
+                            <artifactId>micronaut-inject-java</artifactId>
                             <version>${micronaut.core.version}</version>
+                        </path>
+                        <path>
+                            <groupId>io.micronaut.validation</groupId>
+                            <artifactId>micronaut-validation-processor</artifactId>
+                            <version>${micronaut.validation.version}</version>
                         </path>
                         <path>
                             <groupId>io.micronaut.serde</groupId>
@@ -127,6 +132,11 @@
                                     <artifactId>micronaut-inject</artifactId>
                                 </exclusion>
                             </exclusions>
+                        </path>
+                        <path>
+                            <groupId>io.micronaut</groupId>
+                            <artifactId>micronaut-http-validation</artifactId>
+                            <version>${micronaut.core.version}</version>
                         </path>
                     </annotationProcessorPaths>
                     <compilerArgs>

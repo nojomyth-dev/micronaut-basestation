@@ -14,51 +14,58 @@ import java.util.List;
 @Controller("/world")
 public class WorldController {
 
-    private final GameProperties props;
-    private final WorldEngine worldEngine;
+  private final GameProperties props;
+  private final WorldEngine worldEngine;
 
-    public WorldController(GameProperties props, WorldEngine worldEngine) {
-        this.props = props;
-        this.worldEngine = worldEngine;
-    }
+  public WorldController(GameProperties props, WorldEngine worldEngine) {
+    this.props = props;
+    this.worldEngine = worldEngine;
+  }
 
-    @Get("/snapshot")
-    public WorldSnapshotResponse snapshot() {
-        WorldSnapshotResponse response = WorldSnapshotResponse.from(props, worldEngine.getAllShips());
+  @Get("/snapshot")
+  public WorldSnapshotResponse snapshot() {
+    List<DepotDto> depotDtos = props.getDepots().stream()
+        .map(d -> new DepotDto(d.getId(), d.getX(), d.getY(), d.getName()))
+        .toList();
 
-        List<DepotDto> depotDtos = props.getDepots().stream()
-                .map(d -> new DepotDto(d.getId(), d.getX(), d.getY(), d.getName()))
-                .toList();
-        
-        List<MissionDto> missionDtos = worldEngine.getActiveMissions().stream()
-                .map(m -> new MissionDto(
-                        m.getId(),
-                        m.getDescription(),
-                        m.getTarget().getX(),
-                        m.getTarget().getY(),
-                        m.getReward(),
-                        m.getExpiresAt().getEpochSecond()))
-                .toList();
+    List<MissionDto> missionDtos = worldEngine.getActiveMissions().stream()
+        .map(m -> new MissionDto(
+            m.getId(),
+            m.getDescription(),
+            m.getTarget().getX(),
+            m.getTarget().getY(),
+            m.getReward(),
+            m.getExpiresAt().getEpochSecond()))
+        .toList();
 
-        List<ResourceDto> resourceDtos = worldEngine.getAllResources().stream()
-                .map(r -> new ResourceDto(
-                        r.getId(),
-                        r.getType().name(),
-                        r.getValue(),
-                        r.getPosition().getX(),
-                        r.getPosition().getY()))
-                .toList();
+    List<ResourceDto> resourceDtos = worldEngine.getAllResources().stream()
+        .map(r -> new ResourceDto(
+            r.getId(),
+            r.getType().name(),
+            r.getValue(),
+            r.getPosition().getX(),
+            r.getPosition().getY()))
+        .toList();
 
-        return new WorldSnapshotResponse(
-                response.getWidth(),
-                response.getHeight(),
-                response.getHomeX(),
-                response.getHomeY(),
-                response.getRefillRadius(),
-                response.getShips(),
-                depotDtos,
-                missionDtos,
-                resourceDtos
-        );
-    }
+    return new WorldSnapshotResponse(
+        props.getWorld().getWidth(),
+        props.getWorld().getHeight(),
+        props.getHomeBase().getX(),
+        props.getHomeBase().getY(),
+        props.getHomeBase().getRefillRadius(),
+        worldEngine.getAllShips().stream()
+            .map(s -> new de.riversroses.api.dto.ships.ShipMarkerDto(
+                s.getShipId(),
+                s.getTeamName(),
+                s.getPosition().getX(),
+                s.getPosition().getY(),
+                s.getHeadingDeg(),
+                s.getSpeed(),
+                s.getFuel()))
+            .toList(),
+        depotDtos,
+        missionDtos,
+        resourceDtos);
+  }
+
 }

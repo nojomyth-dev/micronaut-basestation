@@ -4,20 +4,20 @@ import de.riversroses.config.GameProperties;
 import de.riversroses.domain.model.Ship;
 import de.riversroses.domain.model.Vector2;
 import jakarta.inject.Singleton;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.Duration;
 import java.time.Instant;
 
+@Data
+@AllArgsConstructor
 @Singleton
 @Slf4j
 public class PhysicsEngine {
 
   private final GameProperties props;
-
-  public PhysicsEngine(GameProperties props) {
-    this.props = props;
-  }
 
   public void tickShip(Ship ship, Instant now) {
 
@@ -39,6 +39,9 @@ public class PhysicsEngine {
       return;
     }
 
+    // Capture old position to calculate actual distance later
+    Vector2 oldPos = ship.getPosition();
+
     // Convert heading to radians (0 deg = north)
     double radians = Math.toRadians(ship.getHeadingDeg());
 
@@ -48,14 +51,20 @@ public class PhysicsEngine {
     // cos(0) = 1, cos(90) = 0 -> Y is controlled by Cosine
     double vy = Math.cos(radians) * ship.getSpeed();
 
-    Vector2 pos = ship.getPosition();
-    double newX = pos.getX() + vx * dt;
-    double newY = pos.getY() + vy * dt;
+    double newX = oldPos.getX() + vx * dt;
+    double newY = oldPos.getY() + vy * dt;
 
     // clamp to world bounds
     newX = clamp(newX, 0, props.getWorld().getWidth());
     newY = clamp(newY, 0, props.getWorld().getHeight());
+
+    // Update position
     ship.setPosition(new Vector2(newX, newY));
+
+    // Calculate actual distance moved (handling wall collisions)
+    double dx = newX - oldPos.getX();
+    double dy = newY - oldPos.getY();
+    double actualDist = Math.sqrt(dx * dx + dy * dy);
 
     // Fuel calculation
     int totalItems = ship.getCargo().values().stream().mapToInt(Integer::intValue).sum();
@@ -63,9 +72,9 @@ public class PhysicsEngine {
     double baseBurn = props.getPhysics().getFuelPerSecondAtSpeed1();
     double cargoPenalty = props.getPhysics().getFuelPerCargoUnit() * totalItems;
 
-    // (Base + Penalty) * Speed * TimeDelta
+    // Formula: (Base + Penalty) * Distance
     double totalBurnFactor = baseBurn + cargoPenalty;
-    double burned = totalBurnFactor * ship.getSpeed() * dt;
+    double burned = totalBurnFactor * actualDist;
 
     // Synchronized to prevent conflict with Scan deducting fuel at same time
     synchronized (ship) {

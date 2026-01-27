@@ -7,6 +7,8 @@ import de.riversroses.domain.model.Ship;
 import de.riversroses.domain.model.SpawnedResource;
 import de.riversroses.domain.model.Vector2;
 import jakarta.inject.Singleton;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.Instant;
@@ -16,8 +18,10 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Consumer;
 
+@Data
 @Singleton
 @Slf4j
+@AllArgsConstructor
 public class WorldEngine {
 
   private final GameProperties props;
@@ -26,10 +30,6 @@ public class WorldEngine {
   private final Queue<GameCommand> commandQueue = new ConcurrentLinkedQueue<>();
   private final Map<String, SpawnedResource> resources = new ConcurrentHashMap<>();
   private final Map<String, Mission> missions = new ConcurrentHashMap<>();
-
-  public WorldEngine(GameProperties props) {
-    this.props = props;
-  }
 
   public void addResource(SpawnedResource node) {
     resources.put(node.getId(), node);
@@ -61,19 +61,19 @@ public class WorldEngine {
   }
 
   public Ship register(String token, String teamName) {
-    
+
     log.info("Registering ship: {} (Token {})", teamName, token);
     return shipsByToken.compute(token, (key, existing) -> {
 
       Instant now = Instant.now();
-      
+
       if (existing != null) {
 
-        log.info("Team re-connected: {} (Ship {})", teamName, existing.getShipId());
-        
+        log.info("Team reconnected: {} (Ship {})", teamName, existing.getShipId());
+
         existing.setTeamName(teamName);
         existing.setLastCommandAt(now);
-        
+
         return existing;
       } else {
         Ship s = new Ship();
@@ -87,9 +87,9 @@ public class WorldEngine {
         s.setFuel(props.getPhysics().getMaxFuel());
         s.setLastChangedAt(now);
         s.setLastCommandAt(now);
-        
+
         log.info("New Ship registered: {} -> {}", teamName, s.getShipId());
-        
+
         return s;
       }
     });
@@ -184,7 +184,7 @@ public class WorldEngine {
     ship.getCargo().forEach((typeStr, count) -> {
       try {
         SpawnedResource.ResourceType type = SpawnedResource.ResourceType.valueOf(typeStr);
-        GameProperties.OreConfig conf = props.getWorld().getOres().get(typeStr);
+        GameProperties.Ore conf = props.getWorld().getOres().get(typeStr);
         int val = (conf != null) ? conf.getValue() : 10;
 
         for (int i = 0; i < count; i++) {
@@ -240,12 +240,12 @@ public class WorldEngine {
       String typeName = entry.getKey();
       int count = entry.getValue();
 
-      GameProperties.OreConfig conf = props.getWorld().getOres().get(typeName);
+      GameProperties.Ore conf = props.getWorld().getOres().get(typeName);
 
       if (conf != null) {
-        totalValue += (long) conf.getValue() * count;
+      totalValue += (long) conf.getValue() * count;
       } else {
-        totalValue += count;
+      totalValue += count;
       }
       totalItems += count;
     }

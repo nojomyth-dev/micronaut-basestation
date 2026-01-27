@@ -5,6 +5,8 @@ import de.riversroses.config.GameProperties;
 import de.riversroses.domain.model.Mission;
 import de.riversroses.domain.model.Vector2;
 import jakarta.inject.Singleton;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.Instant;
@@ -12,17 +14,14 @@ import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
+@Data
 @Singleton
+@AllArgsConstructor
 @Slf4j
 public class MissionSpawner {
 
   private final WorldEngine engine;
   private final GameProperties props;
-
-  public MissionSpawner(WorldEngine engine, GameProperties props) {
-    this.engine = engine;
-    this.props = props;
-  }
 
   public void tick() {
     engine.removeExpiredMissions();

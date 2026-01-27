@@ -1,16 +1,12 @@
 package de.riversroses.api.dto.world;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import io.micronaut.serde.annotation.Serdeable;
 
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-public class ResourceDto {
-  private String id;
-  private String type;
-  private Integer value;
-  private Double x;
-  private Double y;
-}
+@Serdeable
+public record ResourceDto(
+    String id,
+    String type,
+    Integer value,
+    Double x,
+    Double y
+) {}

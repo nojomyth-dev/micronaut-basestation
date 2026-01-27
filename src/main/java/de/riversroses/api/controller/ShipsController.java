@@ -1,18 +1,20 @@
 package de.riversroses.api.controller;
 
-import de.riversroses.api.dto.ships.*;
+import de.riversroses.api.dto.ships.RegisterShipRequest;
+import de.riversroses.api.dto.ships.RegisterShipResponse;
+import de.riversroses.api.dto.ships.SetCourseRequest;
+import de.riversroses.api.dto.ships.ShipStatusResponse;
 import de.riversroses.application.service.WorldEngine;
 import de.riversroses.config.GameProperties;
 import de.riversroses.domain.model.Ship;
 import de.riversroses.domain.model.Vector2;
 import io.micronaut.http.HttpResponse;
+import io.micronaut.http.HttpStatus;
 import io.micronaut.http.annotation.*;
 import io.micronaut.http.exceptions.HttpStatusException;
-import io.micronaut.http.HttpStatus;
 import io.micronaut.serde.annotation.Serdeable;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.Instant;
@@ -26,25 +28,28 @@ public class ShipsController {
   private final GameProperties props;
 
   @Post("/register")
-  public RegisterShipResponse register(@Body @Valid RegisterShipRequest req) {
-    String cleanTeam = req.getTeamName().trim().substring(0, Math.min(req.getTeamName().length(), 30));
+  public HttpResponse<RegisterShipResponse> register(@Body @Valid RegisterShipRequest req) {
+    log.info("{}", req);
 
-    Ship ship = engine.register(req.getToken(), cleanTeam);
+    String teamTrimmed = req.teamName().trim();
+    String cleanTeam = teamTrimmed.substring(0, Math.min(teamTrimmed.length(), 30));
 
-    return RegisterShipResponse.builder()
-        .shipId(ship.getShipId())
-        .startX(ship.getPosition().getX())
-        .startY(ship.getPosition().getY())
-        .fuelMax(props.getPhysics().getMaxFuel())
-        .build();
+    Ship ship = engine.register(req.token(), cleanTeam);
+
+    return HttpResponse.ok(new RegisterShipResponse(
+        ship.getShipId(),
+        ship.getPosition().getX(),
+        ship.getPosition().getY(),
+        props.getPhysics().getMaxFuel()
+    ));
   }
 
   @Post("/me/course")
   public HttpResponse<?> setCourse(@Header("X-Token") String token, @Body @Valid SetCourseRequest req) {
     engine.queueCommand(token, ship -> {
-      ship.setHeadingDeg(req.getHeadingDeg());
+      ship.setHeadingDeg(req.headingDeg());
 
-      int safeSpeed = Math.min(props.getPhysics().getMaxSpeed(), Math.max(0, req.getSpeed()));
+      int safeSpeed = Math.min(props.getPhysics().getMaxSpeed(), Math.max(0, req.speed()));
       ship.setSpeed(safeSpeed);
 
       ship.setLastCommandAt(Instant.now());
@@ -90,9 +95,6 @@ public class ShipsController {
     Ship ship = engine.getShipByToken(token)
         .orElseThrow(() -> new HttpStatusException(HttpStatus.UNAUTHORIZED, "Unknown Token"));
 
-    // We handle this synchronously here to give immediate feedback on earnings
-    // Locking the ship ensures we don't race with the game loop trying to update
-    // cargo
     synchronized (ship) {
       try {
         var result = engine.unload(ship);
@@ -112,28 +114,28 @@ public class ShipsController {
   }
 
   private double distance(Vector2 a, Vector2 b) {
-    return Math.sqrt(Math.pow(a.getX() - b.getX(), 2) + Math.pow(a.getY() - b.getY(), 2));
+    double dx = a.getX() - b.getX();
+    double dy = a.getY() - b.getY();
+    return Math.sqrt(dx * dx + dy * dy);
   }
 
   private ShipStatusResponse toDto(Ship ship) {
-    return ShipStatusResponse.builder()
-        .shipId(ship.getShipId())
-        .teamName(ship.getTeamName())
-        .x(ship.getPosition().getX())
-        .y(ship.getPosition().getY())
-        .headingDeg(ship.getHeadingDeg())
-        .speed(ship.getSpeed())
-        .fuel(ship.getFuel())
-        .credits(ship.getCredits())
-        .cargo(ship.getCargo())
-        .build();
+    return new ShipStatusResponse(
+        ship.getShipId(),
+        ship.getTeamName(),
+        ship.getPosition().getX(),
+        ship.getPosition().getY(),
+        ship.getHeadingDeg(),
+        ship.getSpeed(),
+        ship.getFuel(),
+        ship.getCredits(),
+        ship.getCargo()
+    );
   }
 
   @Serdeable
-  public record ShipConfigDto(Boolean autoCollect) {
-  }
+  public record ShipConfigDto(Boolean autoCollect) {}
 
   @Serdeable
-  public record UnloadResponse(int itemsSold, long earned, long totalCredits) {
-  }
+  public record UnloadResponse(int itemsSold, long earned, long totalCredits) {}
 }

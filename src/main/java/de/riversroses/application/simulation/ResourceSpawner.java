@@ -5,6 +5,8 @@ import de.riversroses.config.GameProperties;
 import de.riversroses.domain.model.SpawnedResource;
 import de.riversroses.domain.model.Vector2;
 import jakarta.inject.Singleton;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
@@ -13,15 +15,12 @@ import java.util.concurrent.ThreadLocalRandom;
 
 @Singleton
 @Slf4j
+@AllArgsConstructor
+@Data
 public class ResourceSpawner {
 
   private final WorldEngine engine;
   private final GameProperties props;
-
-  public ResourceSpawner(WorldEngine engine, GameProperties props) {
-    this.engine = engine;
-    this.props = props;
-  }
 
   public void tick() {
     if (engine.getResourceCount() < props.getWorld().getNodesOnMap()) {
@@ -36,7 +35,7 @@ public class ResourceSpawner {
     double x = ThreadLocalRandom.current().nextDouble(0, w);
     double y = ThreadLocalRandom.current().nextDouble(0, h);
 
-    Map<String, GameProperties.OreConfig> oreConfigs = props.getWorld().getOres();
+    var oreConfigs = props.getWorld().getOres();
 
     if (oreConfigs.isEmpty()) {
       log.warn("No ore configuration found! Cannot spawn resources.");
@@ -44,14 +43,14 @@ public class ResourceSpawner {
     }
 
     int totalWeight = oreConfigs.values().stream()
-        .mapToInt(GameProperties.OreConfig::getWeight)
+        .mapToInt(GameProperties.Ore::getWeight)
         .sum();
 
     int roll = ThreadLocalRandom.current().nextInt(totalWeight);
     String selectedTypeStr = null;
-    GameProperties.OreConfig selectedConfig = null;
+    GameProperties.Ore selectedConfig = null;
 
-    for (Map.Entry<String, GameProperties.OreConfig> entry : oreConfigs.entrySet()) {
+    for (Map.Entry<String, GameProperties.Ore> entry : oreConfigs.entrySet()) {
       roll -= entry.getValue().getWeight();
       if (roll < 0) {
         selectedTypeStr = entry.getKey();
@@ -76,7 +75,7 @@ public class ResourceSpawner {
       engine.addResource(node);
 
     } catch (IllegalArgumentException e) {
-      log.error("Configured type '{}' is invalid", selectedTypeStr);
+      log.error("Configured type '{}' is invalid", selectedTypeStr.toUpperCase());
     }
   }
 }

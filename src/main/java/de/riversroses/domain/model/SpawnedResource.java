@@ -18,8 +18,8 @@ public class SpawnedResource {
     DIAMOND(Behavior.CARGO),
 
     // Crates (Instant Effects)
-    CRATE_CREDITS(Behavior.INSTANT_CREDITS),
-    CRATE_FUEL(Behavior.INSTANT_FUEL);
+    CRATECREDITS(Behavior.INSTANT_CREDITS),
+    CRATEFUEL(Behavior.INSTANT_FUEL);
 
     private final Behavior behavior;
 

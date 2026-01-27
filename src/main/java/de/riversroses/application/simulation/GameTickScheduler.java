@@ -4,12 +4,16 @@ import de.riversroses.application.service.WorldEngine;
 import de.riversroses.config.GameProperties;
 import io.micronaut.scheduling.annotation.Scheduled;
 import jakarta.inject.Singleton;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.Instant;
 
+@Data
 @Singleton
 @Slf4j
+@AllArgsConstructor
 public class GameTickScheduler {
 
   private final GameProperties props;
@@ -18,23 +22,12 @@ public class GameTickScheduler {
   private final ResourceSpawner resourceSpawner;
   private final MissionSpawner missionSpawner;
 
-  public GameTickScheduler(GameProperties props,
-      WorldEngine engine,
-      PhysicsEngine physics,
-      ResourceSpawner resourceSpawner,
-      MissionSpawner missionSpawner) {
-    this.props = props;
-    this.engine = engine;
-    this.physics = physics;
-    this.resourceSpawner = resourceSpawner;
-    this.missionSpawner = missionSpawner;
-  }
-
   @Scheduled(fixedDelay = "${game.tick.periodMs:500}ms")
   void tick() {
+
     if (!props.getTick().isEnabled())
       return;
-
+    
     processQueue();
     resourceSpawner.tick();
     missionSpawner.tick();
