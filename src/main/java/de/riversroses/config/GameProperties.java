@@ -16,6 +16,7 @@ public class GameProperties {
 
   @Data
   @Introspected
+  @ConfigurationProperties("tick")
   public static class Tick {
     private Boolean enabled = false;
     private Long periodMs = 500L;
@@ -23,6 +24,7 @@ public class GameProperties {
 
   @Data
   @Introspected
+  @ConfigurationProperties("physics")
   public static class Physics {
     /**
      * Fuel burn is: fuelPerSecondAtSpeed1 * speed
@@ -36,6 +38,7 @@ public class GameProperties {
 
   @Data
   @Introspected
+  @ConfigurationProperties("home-base")
   public static class HomeBase {
     private Double x = 500D;
     private Double y = 500D;
@@ -44,6 +47,7 @@ public class GameProperties {
 
   @Data
   @Introspected
+  @ConfigurationProperties("world")
   public static class World {
     private Double width = 1000D;
     private Double height = 1000D;
