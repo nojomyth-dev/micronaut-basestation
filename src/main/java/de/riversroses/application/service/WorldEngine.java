@@ -145,7 +145,7 @@ public class WorldEngine {
               continue;
             }
 
-            ship.getCargo().merge(res.getType().name(), 1, Integer::sum);
+            ship.getCargo().merge(res.getType().name().toLowerCase(), 1, Integer::sum);
             it.remove();
           }
           case INSTANT_CREDITS -> {
@@ -185,7 +185,7 @@ public class WorldEngine {
 
     ship.getCargo().forEach((typeStr, count) -> {
       try {
-        SpawnedResource.ResourceType type = SpawnedResource.ResourceType.valueOf(typeStr);
+        SpawnedResource.ResourceType type = SpawnedResource.ResourceType.valueOf(typeStr.toUpperCase());
         GameProperties.Ore conf = props.getWorld().getOres().get(typeStr);
         int val = (conf != null) ? conf.getValue() : 10;
 
@@ -249,6 +249,9 @@ public class WorldEngine {
       } else {
         totalValue += count;
       }
+
+      log.info("{} {} {}", typeName, count, props.getWorld().getOres());
+
       totalItems += count;
     }
 

@@ -52,7 +52,7 @@ public class PhysicsEngine {
 
     // Update Heading for display (Atan2 returns radians)
     // We swap args (dx, dy) because our 0-degree is North (Y+), not East (X+)
-    double angleRad = Math.atan2(dx, dy);
+    double angleRad = Math.atan2(dx, -dy);
     ship.setHeadingDeg(Math.toDegrees(angleRad));
 
     // Calculate Movement

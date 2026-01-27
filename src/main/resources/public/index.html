@@ -1,0 +1,721 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Rivers & Roses Command Center</title>
+    <style>
+      :root {
+        --bg: #0d1117;
+        --panel: #161b22;
+        --border: #30363d;
+        --text: #c9d1d9;
+        --accent: #388bfd;
+      }
+      body {
+        margin: 0;
+        background-color: var(--bg);
+        color: var(--text);
+        font-family: "Segoe UI", monospace;
+        overflow: hidden;
+        display: flex;
+        height: 100vh;
+      }
+
+      /* Layout */
+      #game-view {
+        flex-grow: 1;
+        position: relative;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: #010409;
+      }
+      #sidebar {
+        width: 300px;
+        background: var(--panel);
+        border-left: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        padding: 10px;
+        box-sizing: border-box;
+        overflow-y: auto;
+      }
+
+      /* Canvas */
+      canvas {
+        background-color: #0d1117;
+        border: 1px solid var(--border);
+        box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+        cursor: crosshair;
+      }
+
+      /* UI Components */
+      h2,
+      h3 {
+        margin: 0 0 10px 0;
+        color: #fff;
+        font-size: 14px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 5px;
+      }
+      .section {
+        margin-bottom: 20px;
+      }
+
+      .btn {
+        background: var(--border);
+        color: #fff;
+        border: none;
+        padding: 6px 12px;
+        cursor: pointer;
+        border-radius: 4px;
+        font-size: 12px;
+        transition: 0.2s;
+        width: 100%;
+        margin-bottom: 5px;
+      }
+      .btn:hover {
+        background: var(--accent);
+      }
+      .btn:active {
+        transform: translateY(1px);
+      }
+      .btn.red {
+        background: #da3633;
+      }
+      .btn.red:hover {
+        background: #f85149;
+      }
+
+      input {
+        background: #0d1117;
+        border: 1px solid var(--border);
+        color: #fff;
+        padding: 5px;
+        width: 100%;
+        box-sizing: border-box;
+        margin-bottom: 5px;
+      }
+
+      /* Ship List */
+      #my-ships {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+      .ship-item {
+        padding: 8px;
+        border: 1px solid var(--border);
+        margin-bottom: 5px;
+        cursor: pointer;
+        border-radius: 4px;
+        font-size: 12px;
+      }
+      .ship-item:hover {
+        background: #21262d;
+      }
+      .ship-item.active {
+        border-color: var(--accent);
+        background: rgba(56, 139, 253, 0.1);
+      }
+      .ship-status {
+        font-size: 10px;
+        color: #8b949e;
+        display: flex;
+        justify-content: space-between;
+        margin-top: 4px;
+      }
+
+      /* Log */
+      #log {
+        font-family: "Courier New", monospace;
+        font-size: 10px;
+        height: 150px;
+        overflow-y: auto;
+        color: #8b949e;
+        border-top: 1px solid var(--border);
+        padding-top: 10px;
+      }
+      .log-entry {
+        margin-bottom: 2px;
+      }
+      .log-success {
+        color: #3fb950;
+      }
+      .log-error {
+        color: #f85149;
+      }
+
+      /* Toast */
+      #toast {
+        position: absolute;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--accent);
+        color: white;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 12px;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s;
+      }
+
+      /* Leaderboard Styling */
+      #leaderboard-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+      .lb-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 4px 8px;
+        border-bottom: 1px solid #21262d;
+        font-size: 11px;
+      }
+      .lb-item:last-child {
+        border-bottom: none;
+      }
+      .lb-rank {
+        width: 20px;
+        color: #8b949e;
+        font-weight: bold;
+      }
+      .lb-name {
+        flex-grow: 1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        margin-right: 10px;
+      }
+      .lb-score {
+        color: #e3b341;
+        font-family: monospace;
+      }
+
+      /* Podium Colors */
+      .lb-item.rank-1 .lb-rank {
+        color: #f2cc60;
+      } /* Gold */
+      .lb-item.rank-2 .lb-rank {
+        color: #c0c0c0;
+      } /* Silver */
+      .lb-item.rank-3 .lb-rank {
+        color: #cd7f32;
+      } /* Bronze */
+      .lb-item.rank-1 .lb-name {
+        color: #f2cc60;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="game-view">
+      <div id="toast">Command Sent</div>
+      <canvas id="worldCanvas"></canvas>
+      <div
+        style="
+          position: absolute;
+          bottom: 10px;
+          left: 10px;
+          font-size: 10px;
+          color: #8b949e;
+        "
+      >
+        Left Click: Select Point &bull; Right Click: Move Selected Ship
+      </div>
+    </div>
+
+    <div id="sidebar">
+      <div class="section">
+        <h2>Sector Leaderboard</h2>
+        <ul id="leaderboard-list"></ul>
+      </div>
+
+      <div class="section">
+        <h2>Register New Ship</h2>
+        <input
+          type="text"
+          id="reg-team"
+          placeholder="Team Name (e.g. RedLeader)"
+        />
+        <button class="btn" onclick="registerShip()">Spawn Ship</button>
+      </div>
+
+      <div class="section">
+        <h2>My Fleet</h2>
+        <div
+          id="no-ships-msg"
+          style="font-size: 11px; color: #666; margin-bottom: 5px"
+        >
+          No ships under command.
+        </div>
+        <ul id="my-ships"></ul>
+      </div>
+
+      <div class="section">
+        <h2>Ship Controls</h2>
+        <div style="font-size: 11px; margin-bottom: 5px">
+          Speed Setting: <span id="speed-val">50</span>
+        </div>
+        <input
+          type="range"
+          id="speed-slider"
+          min="0"
+          max="100"
+          value="50"
+          oninput="document.getElementById('speed-val').innerText = this.value"
+        />
+
+        <div
+          style="
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 5px;
+            margin-top: 10px;
+          "
+        >
+          <button class="btn" onclick="sendRefill()">Refill Fuel</button>
+          <button class="btn" onclick="sendUnload()">Unload Cargo</button>
+          <button class="btn" onclick="sendConfig(true)">AutoCollect ON</button>
+          <button class="btn" onclick="sendConfig(false)">
+            AutoCollect OFF
+          </button>
+        </div>
+        <button class="btn red" style="margin-top: 5px" onclick="sendDump()">
+          Dump Cargo (Emergency)
+        </button>
+      </div>
+
+      <div id="log"></div>
+    </div>
+
+    <script>
+      // --- STATE ---
+      const GAME_CONFIG = { width: 1000, height: 1000 }; // Default, updated on fetch
+      let worldData = null;
+      let myFleet = JSON.parse(localStorage.getItem("rivers_fleet")) || {}; // Map: Token -> ShipId
+      let selectedToken = null;
+      let leaderboardData = [];
+
+      // --- CANVAS SETUP ---
+      const canvas = document.getElementById("worldCanvas");
+      const ctx = canvas.getContext("2d");
+      let scaleFactor = 1.0;
+
+      function resize() {
+        const size = Math.min(window.innerWidth, window.innerHeight) - 40;
+        canvas.width = size;
+        canvas.height = size;
+        scaleFactor = size / GAME_CONFIG.width;
+        render(); // Force redraw
+      }
+      window.addEventListener("resize", resize);
+
+      // --- API CALLS ---
+
+      function log(msg, type = "normal") {
+        const div = document.createElement("div");
+        div.className =
+          "log-entry " +
+          (type === "error"
+            ? "log-error"
+            : type === "success"
+              ? "log-success"
+              : "");
+        div.innerText = `> ${msg}`;
+        const logBox = document.getElementById("log");
+        logBox.prepend(div);
+      }
+
+      async function registerShip() {
+        const team = document.getElementById("reg-team").value || "Anon";
+        const token = "cmd-" + Math.random().toString(36).substr(2, 9); // Generate a client-side token
+
+        try {
+          const res = await fetch("/ships/register", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ token: token, teamName: team }),
+          });
+
+          if (res.ok) {
+            const data = await res.json();
+            myFleet[token] = { id: data.shipId, team: team };
+            localStorage.setItem("rivers_fleet", JSON.stringify(myFleet));
+            log(`Registered ${team}`, "success");
+            renderFleetList();
+            // Auto Select
+            selectShip(token);
+          } else {
+            log("Registration failed", "error");
+          }
+        } catch (e) {
+          log("Net error: " + e.message, "error");
+        }
+      }
+
+      async function setCourse(x, y) {
+        if (!selectedToken) {
+          log("No ship selected!", "error");
+          return;
+        }
+        const speed = parseInt(document.getElementById("speed-slider").value);
+
+        showToast(`Moving to ${Math.round(x)},${Math.round(y)}`);
+
+        await fetch("/ships/me/course", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Token": selectedToken,
+          },
+          body: JSON.stringify({ targetX: x, targetY: y, speed: speed }),
+        });
+      }
+
+      async function sendRefill() {
+        if (!selectedToken) return;
+        await fetch("/ships/me/refill", {
+          method: "POST",
+          headers: { "X-Token": selectedToken },
+        });
+        log("Refill command sent");
+      }
+
+      async function sendUnload() {
+        if (!selectedToken) return;
+        const res = await fetch("/ships/me/unload", {
+          method: "POST",
+          headers: { "X-Token": selectedToken },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          log(`Sold ${data.itemsSold} items for $${data.earned}`, "success");
+        } else {
+          const err = await res.json();
+          log(`Unload fail: ${err.message}`, "error");
+        }
+      }
+
+      async function sendDump() {
+        if (!selectedToken) return;
+        if (confirm("Dump all cargo into space?")) {
+          await fetch("/ships/me/dump", {
+            method: "POST",
+            headers: { "X-Token": selectedToken },
+          });
+          log("Cargo dumped");
+        }
+      }
+
+      async function sendConfig(autoCollect) {
+        if (!selectedToken) return;
+        await fetch("/ships/me/config", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Token": selectedToken,
+          },
+          body: JSON.stringify({ autoCollect: autoCollect }),
+        });
+        log(`AutoCollect set to ${autoCollect}`);
+      }
+
+      async function fetchLeaderboard() {
+        try {
+          const res = await fetch("/leaderboard");
+          if (res.ok) {
+            leaderboardData = await res.json();
+            renderLeaderboard();
+          }
+        } catch (e) {
+          console.error("Leaderboard fetch failed", e);
+        }
+      }
+
+      // --- GAME LOOP ---
+      setInterval(fetchLeaderboard, 2000);
+
+      function loop() {
+        render();
+        requestAnimationFrame(loop);
+      }
+      async function fetchData() {
+        try {
+          const response = await fetch("/world/snapshot");
+          if (response.ok) {
+            const rawData = await response.json();
+
+            worldData = {
+              ...rawData,
+              ships: rawData.ships || [],
+              depots: rawData.depots || [],
+              missions: rawData.missions || [],
+              resources: rawData.resources || [],
+            };
+
+            GAME_CONFIG.width = worldData.width || 1000;
+            GAME_CONFIG.height = worldData.height || 1000;
+
+            if (Math.abs(canvas.width / scaleFactor - GAME_CONFIG.width) > 1) {
+              resize();
+            }
+          }
+        } catch (e) {
+          console.error("Fetch failed", e);
+        }
+      }
+
+      setInterval(fetchData, 250);
+      loop();
+      renderFleetList();
+
+      // --- UI LOGIC ---
+
+      function renderLeaderboard() {
+        if (!leaderboardData || leaderboardData.length === 0) {
+          const list = document.getElementById("leaderboard-list");
+          list.innerHTML =
+            '<li style="padding:5px; color:#666; font-style:italic; font-size:11px;">No data</li>';
+          return;
+        }
+
+        const list = document.getElementById("leaderboard-list");
+        list.innerHTML = "";
+
+        leaderboardData.forEach((entry, index) => {
+          const rank = index + 1;
+          const li = document.createElement("li");
+          li.className = `lb-item rank-${rank}`;
+
+          const myTeamNames = Object.values(myFleet).map((s) => s.team);
+          if (myTeamNames.includes(entry.team)) {
+            li.style.background = "rgba(56, 139, 253, 0.1)";
+          }
+
+          li.innerHTML = `
+                <span class="lb-rank">#${rank}</span>
+                <span class="lb-name">${entry.team}</span>
+                <span class="lb-score">$${entry.score}</span> 
+            `;
+          list.appendChild(li);
+        });
+      }
+
+      function renderFleetList() {
+        const list = document.getElementById("my-ships");
+        list.innerHTML = "";
+        const keys = Object.keys(myFleet);
+
+        document.getElementById("no-ships-msg").style.display =
+          keys.length === 0 ? "block" : "none";
+
+        keys.forEach((token) => {
+          const shipInfo = myFleet[token];
+          const li = document.createElement("li");
+          li.className =
+            "ship-item " + (selectedToken === token ? "active" : "");
+          li.onclick = () => selectShip(token);
+
+          // Find live data
+          let liveInfo = "Offline";
+          let fuel = 0;
+          if (worldData) {
+            const liveShip = worldData.ships.find(
+              (s) => s.shipId === shipInfo.id,
+            );
+            if (liveShip) {
+              liveInfo = `(${Math.round(liveShip.x)}, ${Math.round(liveShip.y)})`;
+              fuel = Math.round(liveShip.fuel);
+            }
+          }
+
+          li.innerHTML = `
+                <div><strong>${shipInfo.team}</strong></div>
+                <div class="ship-status">
+                    <span>${liveInfo}</span>
+                    <span>Fuel: ${fuel}</span>
+                </div>
+            `;
+          list.appendChild(li);
+        });
+      }
+
+      function selectShip(token) {
+        selectedToken = token;
+        renderFleetList();
+      }
+
+      function showToast(msg) {
+        const t = document.getElementById("toast");
+        t.innerText = msg;
+        t.style.opacity = "1";
+        setTimeout(() => (t.style.opacity = "0"), 2000);
+      }
+
+      // --- INPUT HANDLING ---
+
+      canvas.addEventListener("contextmenu", (e) => {
+        e.preventDefault();
+        const rect = canvas.getBoundingClientRect();
+        const x = (e.clientX - rect.left) / scaleFactor;
+        const y = (e.clientY - rect.top) / scaleFactor;
+        setCourse(x, y);
+      });
+
+      // --- RENDERING ---
+
+      function render() {
+        // Clear
+        ctx.fillStyle = "#010409";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Grid
+        drawGrid();
+
+        if (!worldData) {
+          ctx.fillStyle = "white";
+          ctx.fillText("Connecting...", 20, 20);
+          return;
+        }
+
+        // World Objects
+        drawBase(worldData.homeX, worldData.homeY, worldData.refillRadius);
+        worldData.depots.forEach(drawDepot);
+        worldData.missions.forEach(drawMission);
+        worldData.resources.forEach(drawResource);
+
+        // Ships
+        worldData?.ships.forEach((s) => {
+          const isMine = Object.values(myFleet).some((f) => f.id === s.shipId);
+          const isSelected =
+            selectedToken &&
+            myFleet[selectedToken] &&
+            myFleet[selectedToken].id === s.shipId;
+          drawShip(s, isMine, isSelected);
+        });
+
+        // Update list periodically to show fuel/pos updates
+        if (Math.random() < 0.1) {
+          renderFleetList();
+        }
+      }
+
+      function drawGrid() {
+        ctx.strokeStyle = "#161b22";
+        ctx.lineWidth = 1;
+        const step = 100 * scaleFactor;
+        ctx.beginPath();
+        for (let i = 0; i < canvas.width; i += step) {
+          ctx.moveTo(i, 0);
+          ctx.lineTo(i, canvas.height);
+        }
+        for (let i = 0; i < canvas.height; i += step) {
+          ctx.moveTo(0, i);
+          ctx.lineTo(canvas.width, i);
+        }
+        ctx.stroke();
+      }
+
+      function drawBase(x, y, r) {
+        const sX = x * scaleFactor,
+          sY = y * scaleFactor,
+          sR = r * scaleFactor;
+        ctx.strokeStyle = "#388bfd";
+        ctx.fillStyle = "rgba(56, 139, 253, 0.05)";
+        ctx.beginPath();
+        ctx.arc(sX, sY, sR, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = "#388bfd";
+        ctx.fillText("BASE", sX - 12, sY - 5);
+      }
+
+      function drawDepot(d) {
+        const sX = d.x * scaleFactor;
+        const sY = d.y * scaleFactor;
+
+        // Draw Depot Square
+        ctx.fillStyle = "#8b949e";
+        ctx.fillRect(sX - 4, sY - 4, 8, 8);
+
+        // Draw Depot Name
+        ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
+        ctx.font = "10px monospace";
+        ctx.textAlign = "center";
+        // Draw text slightly above the square
+        ctx.fillText(d.name || "Depot", sX, sY - 8);
+        ctx.textAlign = "start";
+      }
+
+      function drawMission(m) {
+        const pulse = (Math.sin(Date.now() / 150) + 1) * 3;
+        ctx.strokeStyle = "#d2a8ff";
+        ctx.beginPath();
+        ctx.arc(
+          m.x * scaleFactor,
+          m.y * scaleFactor,
+          4 + pulse,
+          0,
+          Math.PI * 2,
+        );
+        ctx.stroke();
+      }
+
+      function drawResource(r) {
+        let c = "#fff";
+        if (r.type === "IRON") c = "#a371f7";
+        if (r.type === "GOLD") c = "#e3b341";
+        if (r.type === "DIAMOND") c = "#58a6ff";
+        if (r.type.startsWith("CRATE")) c = "#3fb950";
+        ctx.fillStyle = c;
+        ctx.beginPath();
+        ctx.arc(r.x * scaleFactor, r.y * scaleFactor, 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      function drawShip(s, isMine, isSelected) {
+        const x = s.x * scaleFactor,
+          y = s.y * scaleFactor;
+
+        ctx.save();
+        ctx.translate(x, y);
+
+        // Selection Ring
+        if (isSelected) {
+          ctx.strokeStyle = "#fff";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.arc(0, 0, 10, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+
+        // Label
+        ctx.fillStyle = isMine ? "#58a6ff" : "#8b949e";
+        ctx.font = "10px monospace";
+        ctx.fillText(s.teamName, 12, 3);
+
+        // Rotation
+        ctx.rotate((s.headingDeg * Math.PI) / 180);
+
+        // Body
+        ctx.fillStyle = isMine ? "#388bfd" : "#8b949e";
+        if (isSelected) ctx.fillStyle = "#ffffff";
+
+        ctx.beginPath();
+        ctx.moveTo(0, -8);
+        ctx.lineTo(6, 6);
+        ctx.lineTo(0, 3);
+        ctx.lineTo(-6, 6);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.restore();
+      }
+    </script>
+  </body>
+</html>
