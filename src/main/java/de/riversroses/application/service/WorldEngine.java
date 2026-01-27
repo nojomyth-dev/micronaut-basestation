@@ -83,6 +83,8 @@ public class WorldEngine {
         s.setTeamName(teamName);
         s.setPosition(new Vector2(props.getHomeBase().getX(), props.getHomeBase().getY()));
         s.setHeadingDeg(0);
+        s.setTargetX(props.getHomeBase().getX());
+        s.setTargetY(props.getHomeBase().getY());
         s.setSpeed(0);
         s.setFuel(props.getPhysics().getMaxFuel());
         s.setLastChangedAt(now);
@@ -243,9 +245,9 @@ public class WorldEngine {
       GameProperties.Ore conf = props.getWorld().getOres().get(typeName);
 
       if (conf != null) {
-      totalValue += (long) conf.getValue() * count;
+        totalValue += (long) conf.getValue() * count;
       } else {
-      totalValue += count;
+        totalValue += count;
       }
       totalItems += count;
     }

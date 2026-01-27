@@ -40,15 +40,17 @@ public class ShipsController {
         ship.getShipId(),
         ship.getPosition().getX(),
         ship.getPosition().getY(),
-        props.getPhysics().getMaxFuel()
-    ));
+        props.getPhysics().getMaxFuel()));
   }
 
   @Post("/me/course")
   public HttpResponse<?> setCourse(@Header("X-Token") String token, @Body @Valid SetCourseRequest req) {
     engine.queueCommand(token, ship -> {
-      ship.setHeadingDeg(req.headingDeg());
+      // Update Target
+      ship.setTargetX(req.targetX());
+      ship.setTargetY(req.targetY());
 
+      // Update Speed setting
       int safeSpeed = Math.min(props.getPhysics().getMaxSpeed(), Math.max(0, req.speed()));
       ship.setSpeed(safeSpeed);
 
@@ -129,13 +131,14 @@ public class ShipsController {
         ship.getSpeed(),
         ship.getFuel(),
         ship.getCredits(),
-        ship.getCargo()
-    );
+        ship.getCargo());
   }
 
   @Serdeable
-  public record ShipConfigDto(Boolean autoCollect) {}
+  public record ShipConfigDto(Boolean autoCollect) {
+  }
 
   @Serdeable
-  public record UnloadResponse(int itemsSold, long earned, long totalCredits) {}
+  public record UnloadResponse(int itemsSold, long earned, long totalCredits) {
+  }
 }

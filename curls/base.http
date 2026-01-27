@@ -40,7 +40,8 @@ X-Token: {{token}}
 Content-Type: application/json
 
 {
-  "headingDeg": 90,
+  "targetX": 200,
+  "targetY": 200,
   "speed": 50
 }
 

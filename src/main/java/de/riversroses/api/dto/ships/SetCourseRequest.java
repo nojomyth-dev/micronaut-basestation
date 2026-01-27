@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotNull;
 
 @Serdeable
 public record SetCourseRequest(
-    @NotNull @Min(0) @Max(359) Integer headingDeg,
-    @NotNull @Min(0) @Max(1000) Integer speed
-) {}
+    @NotNull Double targetX,
+    @NotNull Double targetY,
+    @NotNull @Min(0) @Max(1000) Integer speed) {
+}

@@ -20,7 +20,6 @@ public class PhysicsEngine {
   private final GameProperties props;
 
   public void tickShip(Ship ship, Instant now) {
-
     Instant last = ship.getLastSimulatedAt();
     if (last == null) {
       ship.setLastSimulatedAt(now);
@@ -34,51 +33,70 @@ public class PhysicsEngine {
     double dt = millis / 1000.0;
     ship.setLastSimulatedAt(now);
 
-    // no movement if speed is 0 or no fuel
-    if (ship.getSpeed() <= 0 || ship.getFuel() <= 0) {
+    // Safety check for null targets (legacy ships or bad inits)
+    if (ship.getTargetX() == null || ship.getTargetY() == null) {
+      ship.setTargetX(ship.getPosition().getX());
+      ship.setTargetY(ship.getPosition().getY());
+    }
+
+    // Calculate Vector to Target
+    double dx = ship.getTargetX() - ship.getPosition().getX();
+    double dy = ship.getTargetY() - ship.getPosition().getY();
+    double distToTarget = Math.sqrt(dx * dx + dy * dy);
+
+    // Check if arrived
+    if (distToTarget < 1.0) {
+      ship.setSpeed(0);
       return;
     }
 
-    // Capture old position to calculate actual distance later
+    // Update Heading for display (Atan2 returns radians)
+    // We swap args (dx, dy) because our 0-degree is North (Y+), not East (X+)
+    double angleRad = Math.atan2(dx, dy);
+    ship.setHeadingDeg(Math.toDegrees(angleRad));
+
+    // Calculate Movement
+    // If we are closer than one tick of movement, just snap to target
+    double stepDistance = ship.getSpeed() * dt;
+
+    double moveX, moveY;
+
+    if (stepDistance >= distToTarget) {
+      // Arrive instantly
+      moveX = dx;
+      moveY = dy;
+      ship.setSpeed(0); // Arrived thus stop
+    } else {
+      // Move partially
+      // Normalize vector (dx/dist, dy/dist) and multiply by step
+      moveX = (dx / distToTarget) * stepDistance;
+      moveY = (dy / distToTarget) * stepDistance;
+    }
+
     Vector2 oldPos = ship.getPosition();
+    double newX = oldPos.getX() + moveX;
+    double newY = oldPos.getY() + moveY;
 
-    // Convert heading to radians (0 deg = north)
-    double radians = Math.toRadians(ship.getHeadingDeg());
-
-    // sin(0) = 0, sin(90) = 1 -> X is controlled by Sine
-    double vx = Math.sin(radians) * ship.getSpeed();
-
-    // cos(0) = 1, cos(90) = 0 -> Y is controlled by Cosine
-    double vy = Math.cos(radians) * ship.getSpeed();
-
-    double newX = oldPos.getX() + vx * dt;
-    double newY = oldPos.getY() + vy * dt;
-
-    // clamp to world bounds
+    // Clamp to World
     newX = clamp(newX, 0, props.getWorld().getWidth());
     newY = clamp(newY, 0, props.getWorld().getHeight());
 
-    // Update position
     ship.setPosition(new Vector2(newX, newY));
 
-    // Calculate actual distance moved (handling wall collisions)
-    double dx = newX - oldPos.getX();
-    double dy = newY - oldPos.getY();
-    double actualDist = Math.sqrt(dx * dx + dy * dy);
+    // Calculate Fuel (Based on actual distance traveled)
+    double traveledDist = distance(oldPos.getX(), oldPos.getY(), newX, newY);
 
-    // Fuel calculation
-    int totalItems = ship.getCargo().values().stream().mapToInt(Integer::intValue).sum();
+    if (traveledDist > 0) {
+      int totalItems = ship.getCargo().values().stream().mapToInt(Integer::intValue).sum();
+      double baseBurn = props.getPhysics().getFuelPerSecondAtSpeed1();
+      double cargoPenalty = props.getPhysics().getFuelPerCargoUnit() * totalItems;
 
-    double baseBurn = props.getPhysics().getFuelPerSecondAtSpeed1();
-    double cargoPenalty = props.getPhysics().getFuelPerCargoUnit() * totalItems;
+      double totalBurnFactor = baseBurn + cargoPenalty;
+      double burned = totalBurnFactor * traveledDist;
 
-    // Formula: (Base + Penalty) * Distance
-    double totalBurnFactor = baseBurn + cargoPenalty;
-    double burned = totalBurnFactor * actualDist;
-
-    // Synchronized to prevent conflict with Scan deducting fuel at same time
-    synchronized (ship) {
-      ship.setFuel(Math.max(0, ship.getFuel() - burned));
+      synchronized (ship) {
+        ship.setFuel(Math.max(0, ship.getFuel() - burned));
+      }
     }
   }
 
@@ -89,19 +107,22 @@ public class PhysicsEngine {
     double y = props.getHomeBase().getY();
 
     ship.setPosition(new Vector2(x, y));
+    ship.setTargetX(x);
+    ship.setTargetY(y);
     ship.setSpeed(0);
     ship.setHeadingDeg(0);
     ship.setFuel(props.getPhysics().getRespawnFuel());
-
-    // Penalty: Lose cargo
     ship.getCargo().clear();
 
     ship.setLastChangedAt(Instant.now());
-    // Reset simulation timer so they don't "jump" if there was a lag
     ship.setLastSimulatedAt(Instant.now());
   }
 
   private double clamp(double v, double min, double max) {
     return Math.max(min, Math.min(max, v));
+  }
+
+  private double distance(double x1, double y1, double x2, double y2) {
+    return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
   }
 }
