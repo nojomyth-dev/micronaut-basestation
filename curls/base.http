@@ -1,26 +1,89 @@
-@base = http://localhost:8080
-@shipId = team-1
+@host = http://localhost:8080
+@token = my-secret-team-token
 
-###
-POST {{base}}/ships/register
+### PLAYER SETUP
+
+### Register a new Ship
+# First time: Creates the ship
+# Subsequent times: Updates the team name (reconnect)
+POST {{host}}/ships/register
 Content-Type: application/json
 
 {
-  "shipId": "{{shipId}}",
-  "teamName": "Team One"
+  "token": "{{token}}",
+  "teamName": "USS Enterprise"
 }
 
-###
-POST {{base}}/ships/me/{{shipId}}/course
+### Get My Status
+# Returns position, fuel, credits, cargo, etc.
+GET {{host}}/ships/me
+X-Token: {{token}}
+
+### Configure Ship Systems
+# Toggle auto-collection (true = vacuum mode, false = flyover mode)
+POST {{host}}/ships/me/config
+X-Token: {{token}}
+Content-Type: application/json
+
+{
+  "autoCollect": true
+}
+
+
+
+### NAVIGATION & SENSORS
+
+### Set Course
+# headingDeg: 0=North, 90=East, 180=South, 270=West
+POST {{host}}/ships/me/course
+X-Token: {{token}}
+Content-Type: application/json
+
+{
+  "headingDeg": 90,
+  "speed": 50
+}
+
+### Stop Ship
+POST {{host}}/ships/me/course
+X-Token: {{token}}
 Content-Type: application/json
 
 {
   "headingDeg": 0,
-  "speed": 200
+  "speed": 0
 }
 
-###
-GET {{base}}/ships/me/{{shipId}}
+### Scan
+GET {{host}}/scan?radius=300
+X-Token: {{token}}
 
-###
-GET {{base}}/world/snapshot
+### List Active Missions
+# Global list of courier jobs available to everyone
+GET {{host}}/missions
+
+
+
+### ACTIONS (Refill, Trade, Cargo)
+
+### Refill Fuel
+POST {{host}}/ships/me/refill
+X-Token: {{token}}
+
+### Unload / Sell Cargo
+POST {{host}}/ships/me/unload
+X-Token: {{token}}
+
+### Dump Cargo
+POST {{host}}/ships/me/dump
+X-Token: {{token}}
+
+
+
+### WORLD & VISUALIZATION (Frontend / Debug)
+
+### World Snapshot (God View)
+GET {{host}}/world/snapshot
+
+### Leaderboard
+GET {{host}}/leaderboard

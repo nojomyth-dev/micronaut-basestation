@@ -1,19 +1,43 @@
-micronaut:
-  application:
-    name: mission-control
-  server:
-    port: 8080
-
 # Game server config
 game:
   tick:
     enabled: true
     periodMs: 500
+  
   physics:
     fuelPerSecondAtSpeed1: 0.05
     minSpeed: 0
     maxSpeed: 500
     respawnFuel: 800
+
+  world:
+    width: 1000
+    height: 1000
+    nodes-on-map: 30
+    ores:
+      # Ores (mining)
+      IRON:
+        weight: 100
+        value: 10
+      GOLD:
+        weight: 20
+        value: 50
+      DIAMOND:
+        weight: 5
+        value: 200
+
+      # Creates (Power-Ups, random loot)
+      CRATE_CREDITS:
+        weight: 10
+        value: 500 # grant 500 credits
+
+      CRATE_FUEL:
+        weight: 15
+        value: 300 # grant 300 fuel
+
+  depots:
+    - { id: "d1", x: 200, y: 200, costPerFuel: 0.05, name: "North Outpost" }
+    - { id: "d2", x: 800, y: 800, costPerFuel: 0.03, name: "South Outpost" }
 
 # Other stuff
 endpoints:
@@ -25,3 +49,7 @@ micronaut:
   serde:
     deserialization:
       fail-on-unknown-properties: true
+  application:
+    name: basestation
+  server:
+    port: 8080

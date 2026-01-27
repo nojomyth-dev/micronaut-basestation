@@ -1,27 +1,35 @@
 package de.riversroses.api.dto.world;
 
-import java.util.Collection;
-import java.util.List;
-
+import de.riversroses.api.dto.missions.MissionDto;
+import de.riversroses.api.dto.ships.ShipMarkerDto;
 import de.riversroses.config.GameProperties;
 import de.riversroses.domain.model.Ship;
 import io.micronaut.core.annotation.Introspected;
 import io.micronaut.serde.annotation.Serdeable;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Value;
+
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
 @Value
 @Builder
 @Serdeable
 @Introspected
+@AllArgsConstructor
 public class WorldSnapshotResponse {
-  
+
   Double width;
   Double height;
   Double homeX;
   Double homeY;
   Double refillRadius;
   List<ShipMarkerDto> ships;
+  List<DepotDto> depots;
+  List<MissionDto> missions;
+  List<ResourceDto> resources;
 
   public static WorldSnapshotResponse from(GameProperties props, Collection<Ship> ships) {
     return WorldSnapshotResponse.builder()
@@ -39,20 +47,9 @@ public class WorldSnapshotResponse {
             .speed(s.getSpeed())
             .fuel(s.getFuel())
             .build()).toList())
+        .depots(Collections.emptyList())
+        .missions(Collections.emptyList())
+        .resources(Collections.emptyList())
         .build();
-  }
-
-  @Value
-  @Builder
-  @Serdeable
-  @Introspected
-  public static class ShipMarkerDto {
-    String shipId;
-    String teamName;
-    double x;
-    double y;
-    double headingDeg;
-    double speed;
-    double fuel;
   }
 }

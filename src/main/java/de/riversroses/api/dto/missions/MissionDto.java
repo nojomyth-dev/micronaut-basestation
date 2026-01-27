@@ -1,21 +1,22 @@
-package de.riversroses.api.dto.ships;
+package de.riversroses.api.dto.missions;
 
 import io.micronaut.core.annotation.Introspected;
 import io.micronaut.serde.annotation.Serdeable;
-import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Data
-@Introspected
 @Serdeable
+@Introspected
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class RegisterShipRequest {
-    @NotBlank
-    private String token;
+public class MissionDto {
 
-    @NotBlank
-    private String teamName;
+  private String id;
+  private String description;
+  private double x;
+  private double y;
+  private int reward;
+  private long expiresAtEpoch;
 }
