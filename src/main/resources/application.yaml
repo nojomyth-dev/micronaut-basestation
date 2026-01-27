@@ -2,7 +2,7 @@
 game:
   tick:
     enabled: true
-    periodMs: 500
+    periodMs: 50
   
   physics:
     fuelPerSecondAtSpeed1: 0.05
@@ -15,23 +15,20 @@ game:
     height: 1000
     nodes-on-map: 30
     ores:
-      # Ores (mining)
-      IRON:
+      iron:
         weight: 100
         value: 10
-      GOLD:
+      gold:
         weight: 20
         value: 50
-      DIAMOND:
+      diamond:
         weight: 5
         value: 200
 
-      # Creates (Power-Ups, random loot)
-      CRATECREDITS:
+      cratecredits:
         weight: 10
         value: 500 # grant 500 credits
-
-      CRATEFUEL:
+      cratefuel:
         weight: 15
         value: 300 # grant 300 fuel
 
@@ -55,6 +52,12 @@ micronaut:
     port: 8080
   router:
     static-resources:
+      swagger:
+        paths: classpath:META-INF/swagger
+        mapping: /swagger/**
+      swagger-ui:
+        paths: classpath:META-INF/swagger/views/swagger-ui
+        mapping: /swagger-ui/**
       default:
         enabled: true
         mapping: /**

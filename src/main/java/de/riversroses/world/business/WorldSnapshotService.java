@@ -1,0 +1,79 @@
+package de.riversroses.world.business;
+
+import java.util.List;
+
+import de.riversroses.kernel.engine.GameProperties;
+import de.riversroses.ship.db.ShipRepository;
+import de.riversroses.ship.dto.ShipMarkerDto;
+import de.riversroses.world.db.WorldRepository;
+import de.riversroses.world.dto.MissionDto;
+import de.riversroses.world.dto.ResourceDto;
+import de.riversroses.world.dto.StationDto;
+import de.riversroses.world.dto.WorldSnapshotResponse;
+import jakarta.inject.Singleton;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+
+@Singleton
+@AllArgsConstructor
+@Data
+public class WorldSnapshotService {
+
+  private final GameProperties props;
+  private final WorldRepository worldRepo;
+  private final ShipRepository shipRepo;
+
+  public WorldSnapshotResponse snapshot() {
+
+    List<StationDto> stationDtos = worldRepo.getStations().stream()
+        .map(s -> new StationDto(
+            s.id(),
+            s.position().x(),
+            s.position().y(),
+            s.name(),
+            s.allowsRefill(),
+            s.allowsUnload()))
+        .toList();
+
+    List<MissionDto> missionDtos = worldRepo.getMissions().stream()
+        .map(m -> new MissionDto(
+            m.id(),
+            m.description(),
+            m.target().x(),
+            m.target().y(),
+            m.reward(),
+            m.expiresAt().getEpochSecond()))
+        .toList();
+
+    List<ResourceDto> resourceDtos = worldRepo.getResources().stream()
+        .map(r -> new ResourceDto(
+            r.id(),
+            r.oreId(),
+            r.value(),
+            r.position().x(),
+            r.position().y()))
+        .toList();
+
+    List<ShipMarkerDto> shipDtos = shipRepo.getAllShips().stream()
+        .map(s -> new ShipMarkerDto(
+            s.getShipId(),
+            s.getTeamName(),
+            s.getPosition().x(),
+            s.getPosition().y(),
+            s.getHeadingDeg(),
+            s.getSpeed(),
+            s.getFuel()))
+        .toList();
+
+    return new WorldSnapshotResponse(
+        props.getWorld().getWidth(),
+        props.getWorld().getHeight(),
+        props.getHomeBase().getX(),
+        props.getHomeBase().getY(),
+        props.getHomeBase().getRefillRadius(),
+        shipDtos,
+        stationDtos,
+        missionDtos,
+        resourceDtos);
+  }
+}
