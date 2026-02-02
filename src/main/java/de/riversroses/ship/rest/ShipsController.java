@@ -93,6 +93,10 @@ public class ShipsController {
   @Post("/me/course")
   public HttpResponse<?> setCourse(@Header("X-Token") String token, @Body @Valid SetCourseRequest req) {
    
+    if (!Double.isFinite(req.targetX()) || !Double.isFinite(req.targetY())) {
+         return HttpResponse.badRequest("Invalid coordinates (NaN/Infinity)");
+    }
+
     commandBus.submitVoid("setCourse", ctx -> {
       var ship = ctx.requireShipByToken(token);
 
