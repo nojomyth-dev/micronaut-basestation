@@ -9,6 +9,7 @@ import de.riversroses.ship.model.Ship;
 import de.riversroses.world.db.WorldRepository;
 import de.riversroses.world.model.Station;
 import de.riversroses.world.model.Vector2;
+import io.micronaut.core.annotation.Introspected;
 import jakarta.inject.Singleton;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 @Slf4j
 @AllArgsConstructor
+@Introspected
 public class NavigationService {
 
   private final GameProperties props;
@@ -89,11 +91,25 @@ public class NavigationService {
   }
 
   private void burnFuel(Ship ship, double distance) {
+    // Calculate Cargo Weight
     int cargoCount = ship.getCargo().values().stream().mapToInt(Integer::intValue).sum();
-    double burnRate = props.getPhysics().getFuelPerSecondAtSpeed1()
-        + (props.getPhysics().getFuelPerCargoUnit() * cargoCount);
+    
+    // Base Efficiency
+    double baseCostPerUnit = props.getPhysics().getFuelPerSecondAtSpeed1();
+    double cargoCostPerUnit = props.getPhysics().getFuelPerCargoUnit();
 
-    double burned = burnRate * distance;
+    // Calculate Speed Penalty
+    double maxSpeed = Math.max(1.0, props.getPhysics().getMaxSpeed());
+    double speedRatio = ship.getSpeed() / maxSpeed;
+    
+    // Multiplier: 
+    // At low speed (~0), multiplier is near 1.0x
+    // At max speed (1.0), multiplier is 1.0 + 6.0
+    double speedPenaltyMultiplier = 1.0 + (Math.pow(speedRatio, 3.0) * 6.0);
+
+    double costPerUnitDistance = (baseCostPerUnit + (cargoCostPerUnit * cargoCount)) * speedPenaltyMultiplier;
+    
+    double burned = costPerUnitDistance * distance;
     ship.setFuel(Math.max(0, ship.getFuel() - burned));
   }
 
@@ -110,7 +126,7 @@ public class NavigationService {
     ship.setSpeed(0);
     ship.setHeadingDeg(0);
     ship.setFuel(props.getPhysics().getRespawnFuel());
-    ship.getCargo().clear();
+    ship.getCargo().clear(); // Punishment: Lose cargo
     ship.setLastChangedAt(now);
   }
 }

@@ -1,13 +1,19 @@
 package de.riversroses.ship.model;
 
 import de.riversroses.world.model.Vector2;
+import io.micronaut.serde.annotation.Serdeable;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.Instant;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Serdeable
 public class Ship {
   private String token;
   private String shipId;

@@ -72,7 +72,6 @@
             <artifactId>micronaut-serde-jackson</artifactId>
             <scope>compile</scope>
         </dependency>
-
         <!-- OpenAPI annotations (compile-time + swagger annotations transitively) -->
         <dependency>
             <groupId>io.micronaut.openapi</groupId>

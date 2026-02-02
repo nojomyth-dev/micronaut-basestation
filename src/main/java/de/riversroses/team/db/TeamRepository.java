@@ -5,6 +5,7 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 import de.riversroses.team.model.Team;
+import io.micronaut.core.annotation.Introspected;
 import jakarta.inject.Singleton;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -12,6 +13,7 @@ import lombok.NoArgsConstructor;
 @Singleton
 @NoArgsConstructor
 @Data
+@Introspected
 public class TeamRepository {
 
   private final Map<String, Team> teamsById = new ConcurrentHashMap<>();

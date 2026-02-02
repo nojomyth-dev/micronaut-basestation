@@ -237,13 +237,20 @@
 
       <div class="section">
         <h2>Register New Ship</h2>
-        <input type="text" id="reg-team" placeholder="Team Name (e.g. RedLeader)" />
+        <input
+          type="text"
+          id="reg-team"
+          placeholder="Team Name (e.g. RedLeader)"
+        />
         <button class="btn" onclick="registerShip()">Spawn Ship</button>
       </div>
 
       <div class="section">
         <h2>My Fleet</h2>
-        <div id="no-ships-msg" style="font-size: 11px; color: #666; margin-bottom: 5px">
+        <div
+          id="no-ships-msg"
+          style="font-size: 11px; color: #666; margin-bottom: 5px"
+        >
           No ships under command.
         </div>
         <ul id="my-ships"></ul>
@@ -251,6 +258,38 @@
 
       <div class="section">
         <h2>Ship Controls</h2>
+
+        <div
+          style="
+            background: #21262d;
+            padding: 8px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+          "
+        >
+          <div style="font-size: 11px; margin-bottom: 4px; color: #8b949e">
+            RADAR (Costs Fuel!)
+          </div>
+          <div style="display: flex; gap: 5px">
+            <input
+              type="number"
+              id="scan-radius"
+              value="200"
+              min="50"
+              max="800"
+              style="width: 60px"
+              placeholder="Radius"
+            />
+            <button
+              class="btn"
+              style="width: auto; flex-grow: 1"
+              onclick="performManualScan()"
+            >
+              SCAN AREA
+            </button>
+          </div>
+        </div>
+
         <div style="font-size: 11px; margin-bottom: 5px">
           Speed Setting: <span id="speed-val">50</span>
         </div>
@@ -263,13 +302,24 @@
           oninput="document.getElementById('speed-val').innerText = this.value"
         />
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-top: 10px">
+        <div
+          style="
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 5px;
+            margin-top: 10px;
+          "
+        >
           <button class="btn" onclick="sendRefill()">Refill Fuel</button>
           <button class="btn" onclick="sendUnload()">Unload Cargo</button>
           <button class="btn" onclick="sendConfig(true)">AutoCollect ON</button>
-          <button class="btn" onclick="sendConfig(false)">AutoCollect OFF</button>
+          <button class="btn" onclick="sendConfig(false)">
+            AutoCollect OFF
+          </button>
         </div>
-        <button class="btn red" style="margin-top: 5px" onclick="sendDump()">Dump Cargo (Emergency)</button>
+        <button class="btn red" style="margin-top: 5px" onclick="sendDump()">
+          Dump Cargo (Emergency)
+        </button>
       </div>
 
       <div id="log"></div>
@@ -284,28 +334,30 @@
       let myFleet = JSON.parse(localStorage.getItem("rivers_fleet")) || {};
       let selectedToken = null;
 
+      // Fog of War: Resources found via scan
+      const knownResources = new Map();
+
       let leaderboardData = [];
       let ws = null;
 
       // Fast lookup maps for applying deltas
       const worldIndex = {
         shipsById: new Map(),
-        resourcesById: new Map(),
         missionsById: new Map(),
         stationsById: new Map(),
       };
 
       // --- OPTIMISTIC RENDER STATE (dead-reckoning) ---
       // shipId -> {
-      //   shipId, teamName, fuel, headingDeg, speed,
-      //   serverX, serverY, serverAtMs,
-      //   x, y (rendered)
+      //    shipId, teamName, fuel, headingDeg, speed,
+      //    serverX, serverY, serverAtMs,
+      //    x, y (rendered)
       // }
       const renderShips = new Map();
 
       // Tuning
-      const MAX_PREDICT_SECONDS = 1.2;   // clamp (prevents huge leaps if tab lags)
-      const SNAP_ERROR = 120;            // if server disagrees by more than this, snap
+      const MAX_PREDICT_SECONDS = 1.2; // clamp (prevents huge leaps if tab lags)
+      const SNAP_ERROR = 120; // if server disagrees by more than this, snap
 
       function nowMs() {
         return performance.now();
@@ -346,7 +398,10 @@
         r.speed = s.speed;
 
         // Compute current predicted pos from old anchor to see how far off
-        const dtOld = Math.min(MAX_PREDICT_SECONDS, Math.max(0, (t - r.serverAtMs) / 1000));
+        const dtOld = Math.min(
+          MAX_PREDICT_SECONDS,
+          Math.max(0, (t - r.serverAtMs) / 1000),
+        );
         const dirOld = headingToDir(r.headingDeg || 0);
         const predOldX = r.serverX + dirOld.vx * (r.speed || 0) * dtOld;
         const predOldY = r.serverY + dirOld.vy * (r.speed || 0) * dtOld;
@@ -370,7 +425,10 @@
         const t = nowMs();
 
         for (const r of renderShips.values()) {
-          const dt = Math.min(MAX_PREDICT_SECONDS, Math.max(0, (t - r.serverAtMs) / 1000));
+          const dt = Math.min(
+            MAX_PREDICT_SECONDS,
+            Math.max(0, (t - r.serverAtMs) / 1000),
+          );
           const dir = headingToDir(r.headingDeg || 0);
 
           const predX = r.serverX + dir.vx * (r.speed || 0) * dt;
@@ -411,7 +469,12 @@
       function log(msg, type = "normal") {
         const div = document.createElement("div");
         div.className =
-          "log-entry " + (type === "error" ? "log-error" : type === "success" ? "log-success" : "");
+          "log-entry " +
+          (type === "error"
+            ? "log-error"
+            : type === "success"
+              ? "log-success"
+              : "");
         div.innerText = `> ${msg}`;
         const logBox = document.getElementById("log");
         logBox.prepend(div);
@@ -483,6 +546,41 @@
         log("Refill command sent");
       }
 
+      async function performManualScan() {
+        if (!selectedToken) {
+          log("Select a ship first!", "error");
+          return;
+        }
+
+        const radius = document.getElementById("scan-radius").value;
+
+        try {
+          showToast("Scanning...");
+          const res = await fetch(`/scan?radius=${radius}`, {
+            method: "GET",
+            headers: { "X-Token": selectedToken },
+          });
+
+          if (res.ok) {
+            const data = await res.json();
+
+            let count = 0;
+            if (data.resources) {
+              data.resources.forEach((r) => {
+                knownResources.set(r.id, r);
+                count++;
+              });
+            }
+            log(`Scan complete. Found ${count} resources.`, "success");
+            render();
+          } else {
+            log("Scan failed (Low Fuel?)", "error");
+          }
+        } catch (e) {
+          log("Net error: " + e.message, "error");
+        }
+      }
+
       async function sendUnload() {
         if (!selectedToken) return;
         const res = await fetch("/ships/me/unload", {
@@ -496,7 +594,8 @@
           const value = data.value ?? data.earned ?? 0;
           const total = data.totalCredits ?? data.credits ?? null;
           log(
-            `Sold ${items} items for $${value}` + (total != null ? ` (Total: $${total})` : ""),
+            `Sold ${items} items for $${value}` +
+              (total != null ? ` (Total: $${total})` : ""),
             "success",
           );
         } else {
@@ -595,7 +694,7 @@
           ships: snap.ships || [],
           stations: snap.stations || [],
           missions: snap.missions || [],
-          resources: snap.resources || [],
+          resources: [], // Kept empty, used from memory
         };
 
         GAME_CONFIG.width = worldData.width || 1000;
@@ -612,20 +711,21 @@
           if (!seen.has(id)) renderShips.delete(id);
         }
 
-        if (Math.abs(canvas.width / scaleFactor - GAME_CONFIG.width) > 1) resize();
+        if (Math.abs(canvas.width / scaleFactor - GAME_CONFIG.width) > 1)
+          resize();
         renderFleetList();
       }
 
       function rebuildIndexes() {
         worldIndex.shipsById.clear();
-        worldIndex.resourcesById.clear();
         worldIndex.missionsById.clear();
         worldIndex.stationsById.clear();
 
         for (const s of worldData.ships) worldIndex.shipsById.set(s.shipId, s);
-        for (const r of worldData.resources) worldIndex.resourcesById.set(r.id, r);
-        for (const m of worldData.missions) worldIndex.missionsById.set(m.id, m);
-        for (const st of worldData.stations) worldIndex.stationsById.set(st.id, st);
+        for (const m of worldData.missions)
+          worldIndex.missionsById.set(m.id, m);
+        for (const st of worldData.stations)
+          worldIndex.stationsById.set(st.id, st);
       }
 
       function applyDelta(delta) {
@@ -636,18 +736,17 @@
         for (const op of ops) {
           if (op.ship) {
             upsertShipFromServer(op.ship);
-          } else if (op.resource) {
-            worldIndex.resourcesById.set(op.resource.id, op.resource);
           } else if (op.mission) {
             worldIndex.missionsById.set(op.mission.id, op.mission);
           } else if (op.id && !op.oreId && !op.value && !op.x && !op.y) {
-            worldIndex.resourcesById.delete(op.id);
             worldIndex.missionsById.delete(op.id);
+            // We can optionally remove from knownResources if we knew it was gone,
+            // but for simple Fog of War, we often leave it until re-scanned.
+            knownResources.delete(op.id);
           }
         }
 
         worldData.ships = Array.from(worldIndex.shipsById.values());
-        worldData.resources = Array.from(worldIndex.resourcesById.values());
         worldData.missions = Array.from(worldIndex.missionsById.values());
       }
 
@@ -686,7 +785,8 @@
           const li = document.createElement("li");
           li.className = `lb-item rank-${rank}`;
 
-          if (myTeamNames.includes(entry.team)) li.style.background = "rgba(56, 139, 253, 0.1)";
+          if (myTeamNames.includes(entry.team))
+            li.style.background = "rgba(56, 139, 253, 0.1)";
 
           li.innerHTML = `
             <span class="lb-rank">#${rank}</span>
@@ -702,12 +802,14 @@
         list.innerHTML = "";
         const keys = Object.keys(myFleet);
 
-        document.getElementById("no-ships-msg").style.display = keys.length === 0 ? "block" : "none";
+        document.getElementById("no-ships-msg").style.display =
+          keys.length === 0 ? "block" : "none";
 
         keys.forEach((token) => {
           const shipInfo = myFleet[token];
           const li = document.createElement("li");
-          li.className = "ship-item " + (selectedToken === token ? "active" : "");
+          li.className =
+            "ship-item " + (selectedToken === token ? "active" : "");
           li.onclick = () => selectShip(token);
 
           let liveInfo = "Offline";
@@ -774,14 +876,18 @@
         }
 
         (worldData.missions || []).forEach(drawMission);
-        (worldData.resources || []).forEach(drawResource);
+
+        // Draw Known Resources (Fog of War)
+        knownResources.forEach(drawResource);
 
         const shipsToDraw = getRenderedShipsArray();
 
         shipsToDraw.forEach((s) => {
           const isMine = Object.values(myFleet).some((f) => f.id === s.shipId);
           const isSelected =
-            selectedToken && myFleet[selectedToken] && myFleet[selectedToken].id === s.shipId;
+            selectedToken &&
+            myFleet[selectedToken] &&
+            myFleet[selectedToken].id === s.shipId;
           drawShip(s, isMine, isSelected);
         });
 
@@ -836,7 +942,13 @@
         const pulse = (Math.sin(Date.now() / 150) + 1) * 3;
         ctx.strokeStyle = "#d2a8ff";
         ctx.beginPath();
-        ctx.arc(m.x * scaleFactor, m.y * scaleFactor, 4 + pulse, 0, Math.PI * 2);
+        ctx.arc(
+          m.x * scaleFactor,
+          m.y * scaleFactor,
+          4 + pulse,
+          0,
+          Math.PI * 2,
+        );
         ctx.stroke();
       }
 

@@ -8,13 +8,15 @@ import java.util.concurrent.ConcurrentHashMap;
 import de.riversroses.world.model.Mission;
 import de.riversroses.world.model.SpawnedResource;
 import de.riversroses.world.model.Station;
+import io.micronaut.core.annotation.Introspected;
 import jakarta.inject.Singleton;
-import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Singleton
-@AllArgsConstructor
+@NoArgsConstructor
 @Data
+@Introspected
 public class WorldRepository {
 
   private final Map<String, Station> stations = new ConcurrentHashMap<>();

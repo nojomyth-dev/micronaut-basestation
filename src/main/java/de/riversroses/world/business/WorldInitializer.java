@@ -5,14 +5,18 @@ import de.riversroses.world.db.WorldRepository;
 import de.riversroses.world.model.Station;
 import de.riversroses.world.model.Vector2;
 import io.micronaut.context.event.ApplicationEventListener;
+import io.micronaut.core.annotation.Introspected;
 import io.micronaut.runtime.server.event.ServerStartupEvent;
 import jakarta.inject.Singleton;
 import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
+@Data
 @Singleton
 @Slf4j
 @AllArgsConstructor
+@Introspected
 public class WorldInitializer implements ApplicationEventListener<ServerStartupEvent> {
 
   private final GameProperties props;

@@ -6,6 +6,7 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 import de.riversroses.ship.model.Ship;
+import io.micronaut.core.annotation.Introspected;
 import jakarta.inject.Singleton;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -13,6 +14,7 @@ import lombok.Data;
 @Singleton
 @AllArgsConstructor
 @Data
+@Introspected
 public class ShipRepository {
 
   // Ship auth token -> ship

@@ -10,12 +10,14 @@ import de.riversroses.world.dto.MissionDto;
 import de.riversroses.world.dto.ResourceDto;
 import de.riversroses.world.dto.StationDto;
 import de.riversroses.world.dto.WorldSnapshotResponse;
+import io.micronaut.core.annotation.Introspected;
 import jakarta.inject.Singleton;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
 @Singleton
 @AllArgsConstructor
+@Introspected
 @Data
 public class WorldSnapshotService {
 
@@ -45,14 +47,7 @@ public class WorldSnapshotService {
             m.expiresAt().getEpochSecond()))
         .toList();
 
-    List<ResourceDto> resourceDtos = worldRepo.getResources().stream()
-        .map(r -> new ResourceDto(
-            r.id(),
-            r.oreId(),
-            r.value(),
-            r.position().x(),
-            r.position().y()))
-        .toList();
+    List<ResourceDto> resourceDtos = List.of();
 
     List<ShipMarkerDto> shipDtos = shipRepo.getAllShips().stream()
         .map(s -> new ShipMarkerDto(

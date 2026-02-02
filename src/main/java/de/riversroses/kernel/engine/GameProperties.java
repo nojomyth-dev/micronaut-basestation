@@ -117,4 +117,6 @@ public class GameProperties {
     private Double costPerFuel;
     private String name;
   }
+
+  private String savePath;
 }

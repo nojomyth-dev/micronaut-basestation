@@ -1,5 +1,7 @@
 # Game server config
 game:
+  save-path: "/home/falkensteincy/dev/micronaut-basestation/tmp/gamestate.json"
+
   tick:
     enabled: true
     periodMs: 50
