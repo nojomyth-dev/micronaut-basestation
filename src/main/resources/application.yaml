@@ -29,6 +29,13 @@ game:
     - { id: "d1", x: 200, y: 200, costPerFuel: 0.05, name: "North Outpost" }
     - { id: "d2", x: 800, y: 800, costPerFuel: 0.03, name: "South Outpost" }
 
+  mission-providers:
+    poll-interval-ms: 3000
+    timeout-ms: 5000
+    completion-path: "/complete"
+    urls:
+      - http://127.0.0.1:8081/missions
+
 # Other stuff
 endpoints:
   health:

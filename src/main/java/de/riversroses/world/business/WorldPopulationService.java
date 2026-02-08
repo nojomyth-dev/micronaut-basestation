@@ -38,20 +38,23 @@ public class WorldPopulationService {
   }
 
   private void spawnRandomNode() {
+    
     double w = props.getWorld().getWidth();
     double h = props.getWorld().getHeight();
     double x = ThreadLocalRandom.current().nextDouble(0, w);
     double y = ThreadLocalRandom.current().nextDouble(0, h);
     OreDefinition def = oreRegistry.weightedRandom(rnd);
+    
     if (def == null)
       return;
+    
     SpawnedResource node = new SpawnedResource(
         UUID.randomUUID().toString(),
         new Vector2(x, y),
         def.value(),
         def.id(),
         def.behavior());
-        log.info("Adding resource {}", node.oreId());
+
     worldRepo.addResource(node);
   }
 }

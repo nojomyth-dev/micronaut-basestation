@@ -1,7 +1,10 @@
 package de.riversroses.world.rest;
 
 import java.util.Optional;
+import de.riversroses.infra.error.DomainException;
+import de.riversroses.infra.error.ErrorCode;
 import de.riversroses.kernel.engine.CommandBus;
+import de.riversroses.ship.model.Ship;
 import de.riversroses.world.dto.RadarScanResponse;
 import de.riversroses.world.business.ScannerService;
 import io.micronaut.http.annotation.Controller;
@@ -21,14 +24,28 @@ public class RadarController {
   @Get
   public RadarScanResponse scan(
       @Header("X-Token") String token,
-      @QueryValue Optional<Double> radius) {
+      @QueryValue Optional<String> shipId) {
+
     ScannerService.ScanResult result = commandBus.submitAndWait(
         "scan",
         ctx -> {
-          var ship = ctx.requireShipByToken(token);
-          return scannerService.performScan(ship, radius.orElse(200.0));
+          Ship ship;
+
+          if (shipId.isPresent()) {
+            ship = ctx.shipRepo.findById(shipId.get())
+                .orElseThrow(() -> new DomainException(ErrorCode.NOT_FOUND, "Ship not found"));
+
+            if (!ship.getToken().equals(token)) {
+              throw new DomainException(ErrorCode.FORBIDDEN, "You do not own this ship");
+            }
+          } else {
+            ship = ctx.requireShipByToken(token);
+          }
+
+          return scannerService.performScan(ship, 300.0);
         },
         1500);
+
     return RadarScanResponse.builder()
         .ships(result.ships().stream()
             .map(s -> RadarScanResponse.FoundShip.builder()

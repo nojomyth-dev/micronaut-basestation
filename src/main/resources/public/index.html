@@ -397,14 +397,6 @@
           <div class="card">
             <h2>Long Range Scanners</h2>
             <div class="flex-row">
-              <input
-                type="number"
-                id="scan-radius"
-                value="200"
-                min="50"
-                max="1000"
-                placeholder="Radius"
-              />
               <button class="btn" style="width: auto" onclick="app.scan()">
                 Scan
               </button>
@@ -606,9 +598,12 @@
 
         async scan() {
           try {
-            const r = $("scan-radius").value;
             ui.toast("Scanning...");
-            const res = await api.get(`/scan?radius=${encodeURIComponent(r)}`);
+
+            const shipId = state.selectedShipId;
+            const query = shipId ? `?shipId=${shipId}` : "";
+
+            const res = await api.get(`/scan${query}`);
 
             const ships = Array.isArray(res.ships) ? res.ships : [];
             const resources = Array.isArray(res.resources) ? res.resources : [];

@@ -15,30 +15,32 @@ import lombok.Data;
 @Data
 @Introspected
 public class ShipRepository {
-  private final Map<String, Ship> shipsByToken = new ConcurrentHashMap<>();
+  private final Map<String, Ship> shipsById = new ConcurrentHashMap<>();
 
   public Ship save(Ship ship) {
-    shipsByToken.put(ship.getToken(), ship);
+    shipsById.put(ship.getShipId(), ship);
     return ship;
   }
 
   public Optional<Ship> findByToken(String token) {
-    return Optional.ofNullable(shipsByToken.get(token));
+    return shipsById.values().stream()
+        .filter(s -> token.equals(s.getToken()))
+        .findFirst();
   }
 
   public Optional<Ship> findById(String id) {
-    return shipsByToken.values().stream().filter(s -> s.getShipId().equals(id)).findFirst();
+    return Optional.ofNullable(shipsById.get(id));
   }
 
   public Collection<Ship> getAllShips() {
-    return shipsByToken.values();
+    return shipsById.values();
   }
 
   public long countByTeamId(String teamId) {
-    return shipsByToken.values().stream().filter(s -> teamId.equals(s.getTeamId())).count();
+    return shipsById.values().stream().filter(s -> teamId.equals(s.getTeamId())).count();
   }
 
   public void removeByToken(String token) {
-    shipsByToken.remove(token);
+    shipsById.values().removeIf(s -> token.equals(s.getToken()));
   }
 }
