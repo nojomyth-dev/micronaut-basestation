@@ -2,1005 +2,1028 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Rivers & Roses Command Center</title>
     <style>
       :root {
-        --bg: #0d1117;
-        --panel: #161b22;
-        --border: #30363d;
-        --text: #c9d1d9;
-        --accent: #388bfd;
+        --bg-color: #0b0d12;
+        --panel-bg: #161b22;
+        --border-color: #30363d;
+        --text-primary: #c9d1d9;
+        --text-secondary: #8b949e;
+        --accent-color: #58a6ff;
+        --accent-hover: #79c0ff;
+        --danger-color: #f85149;
+        --success-color: #3fb950;
       }
       body {
         margin: 0;
-        background-color: var(--bg);
-        color: var(--text);
-        font-family: "Segoe UI", monospace;
+        background-color: var(--bg-color);
+        color: var(--text-primary);
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial,
+          sans-serif;
+        height: 100vh;
         overflow: hidden;
         display: flex;
-        height: 100vh;
+        flex-direction: column;
       }
-
-      /* Layout */
+      #app-container {
+        display: flex;
+        flex: 1;
+        height: 100%;
+        overflow: hidden;
+      }
       #game-view {
-        flex-grow: 1;
+        flex: 1;
         position: relative;
+        background: #010409;
+        overflow: hidden;
         display: flex;
         justify-content: center;
         align-items: center;
-        background: #010409;
       }
       #sidebar {
-        width: 300px;
-        background: var(--panel);
-        border-left: 1px solid var(--border);
+        width: 350px;
+        flex-shrink: 0;
+        background: var(--panel-bg);
+        border-left: 1px solid var(--border-color);
         display: flex;
         flex-direction: column;
-        padding: 10px;
-        box-sizing: border-box;
-        overflow-y: auto;
+        z-index: 10;
+        box-shadow: -5px 0 15px rgba(0, 0, 0, 0.5);
       }
-
-      /* Canvas */
       canvas {
         background-color: #0d1117;
-        border: 1px solid var(--border);
-        box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
-        cursor: crosshair;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
       }
-
-      /* UI Components */
-      h2,
-      h3 {
-        margin: 0 0 10px 0;
-        color: #fff;
-        font-size: 14px;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        border-bottom: 1px solid var(--border);
-        padding-bottom: 5px;
+      #login-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(13, 17, 23, 0.95);
+        z-index: 100;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(5px);
       }
-      .section {
-        margin-bottom: 20px;
+      .login-box {
+        background: var(--panel-bg);
+        border: 1px solid var(--border-color);
+        padding: 2rem;
+        border-radius: 8px;
+        width: 400px;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
       }
-
-      .btn {
-        background: var(--border);
-        color: #fff;
+      .login-tabs {
+        display: flex;
+        margin-bottom: 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+      }
+      .tab-btn {
+        flex: 1;
+        background: transparent;
         border: none;
-        padding: 6px 12px;
+        color: var(--text-secondary);
+        padding: 10px;
         cursor: pointer;
-        border-radius: 4px;
+        font-weight: 600;
+        border-bottom: 2px solid transparent;
+      }
+      .tab-btn.active {
+        color: var(--accent-color);
+        border-bottom-color: var(--accent-color);
+      }
+      .form-group {
+        margin-bottom: 1rem;
+      }
+      label {
+        display: block;
         font-size: 12px;
-        transition: 0.2s;
+        color: var(--text-secondary);
+        margin-bottom: 4px;
+      }
+      input[type="text"],
+      input[type="number"] {
         width: 100%;
-        margin-bottom: 5px;
+        background: var(--bg-color);
+        border: 1px solid var(--border-color);
+        color: white;
+        padding: 8px 12px;
+        border-radius: 4px;
+        box-sizing: border-box;
+        font-family: monospace;
+      }
+      input:focus {
+        border-color: var(--accent-color);
+        outline: none;
+      }
+      .btn {
+        display: block;
+        width: 100%;
+        padding: 8px 16px;
+        background: #21262d;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        color: var(--text-primary);
+        font-weight: 600;
+        cursor: pointer;
+        transition: 0.2s;
+        text-align: center;
       }
       .btn:hover {
-        background: var(--accent);
+        background: var(--border-color);
       }
-      .btn:active {
-        transform: translateY(1px);
+      .btn-primary {
+        background: var(--accent-color);
+        color: white;
+        border: none;
       }
-      .btn.red {
-        background: #da3633;
+      .btn-primary:hover {
+        background: var(--accent-hover);
       }
-      .btn.red:hover {
-        background: #f85149;
+      .card {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        padding: 12px;
+        margin-bottom: 15px;
       }
-
-      input {
-        background: #0d1117;
-        border: 1px solid var(--border);
-        color: #fff;
-        padding: 5px;
-        width: 100%;
-        box-sizing: border-box;
-        margin-bottom: 5px;
+      h2 {
+        font-size: 12px;
+        color: var(--text-secondary);
+        margin: 0 0 8px 0;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
       }
-
-      /* Ship List */
-      #my-ships {
+      .scroll-y {
+        overflow-y: auto;
+        flex: 1;
+        padding: 1rem;
+      }
+      .ship-list {
         list-style: none;
         padding: 0;
         margin: 0;
       }
       .ship-item {
         padding: 8px;
-        border: 1px solid var(--border);
-        margin-bottom: 5px;
+        border: 1px solid var(--border-color);
+        margin-bottom: 6px;
+        border-radius: 6px;
         cursor: pointer;
-        border-radius: 4px;
-        font-size: 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: background 0.2s;
       }
       .ship-item:hover {
-        background: #21262d;
+        background: rgba(255, 255, 255, 0.05);
       }
       .ship-item.active {
-        border-color: var(--accent);
-        background: rgba(56, 139, 253, 0.1);
-      }
-      .ship-status {
-        font-size: 10px;
-        color: #8b949e;
-        display: flex;
-        justify-content: space-between;
-        margin-top: 4px;
-      }
-
-      /* Log */
-      #log {
-        font-family: "Courier New", monospace;
-        font-size: 10px;
-        height: 150px;
-        overflow-y: auto;
-        color: #8b949e;
-        border-top: 1px solid var(--border);
-        padding-top: 10px;
-      }
-      .log-entry {
-        margin-bottom: 2px;
-      }
-      .log-success {
-        color: #3fb950;
-      }
-      .log-error {
-        color: #f85149;
-      }
-
-      /* Toast */
-      #toast {
-        position: absolute;
-        top: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: var(--accent);
-        color: white;
-        padding: 8px 16px;
-        border-radius: 20px;
-        font-size: 12px;
-        opacity: 0;
-        pointer-events: none;
-        transition: opacity 0.3s;
-      }
-
-      /* Leaderboard Styling */
-      #leaderboard-list {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-      }
-      .lb-item {
-        display: flex;
-        justify-content: space-between;
-        padding: 4px 8px;
-        border-bottom: 1px solid #21262d;
-        font-size: 11px;
-      }
-      .lb-item:last-child {
-        border-bottom: none;
+        border-color: var(--accent-color);
+        background: rgba(88, 166, 255, 0.1);
       }
       .lb-rank {
         width: 20px;
-        color: #8b949e;
         font-weight: bold;
+        color: var(--text-secondary);
       }
       .lb-name {
-        flex-grow: 1;
+        flex: 1;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-        margin-right: 10px;
       }
       .lb-score {
         color: #e3b341;
         font-family: monospace;
       }
-
-      /* Podium Colors */
-      .lb-item.rank-1 .lb-rank {
-        color: #f2cc60;
+      #toast {
+        position: absolute;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--accent-color);
+        color: white;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 12px;
+        opacity: 0;
+        transition: opacity 0.3s;
+        z-index: 200;
+        pointer-events: none;
       }
-      .lb-item.rank-2 .lb-rank {
-        color: #c0c0c0;
+      #log-panel {
+        height: 180px;
+        background: #0d1117;
+        border-top: 1px solid var(--border-color);
+        padding: 10px;
+        font-size: 11px;
+        overflow-y: auto;
+        font-family: monospace;
       }
-      .lb-item.rank-3 .lb-rank {
-        color: #cd7f32;
+      .log-line {
+        margin-bottom: 4px;
+        color: var(--text-secondary);
+        border-bottom: 1px solid #1c2128;
+        padding-bottom: 2px;
       }
-      .lb-item.rank-1 .lb-name {
-        color: #f2cc60;
+      .log-err {
+        color: var(--danger-color);
+      }
+      .log-success {
+        color: var(--success-color);
+      }
+      .hidden {
+        display: none !important;
+      }
+      .flex-row {
+        display: flex;
+        gap: 8px;
+      }
+      .text-xs {
+        font-size: 10px;
       }
     </style>
   </head>
   <body>
-    <div id="game-view">
-      <div id="toast">Command Sent</div>
-      <canvas id="worldCanvas"></canvas>
-      <div
-        style="
-          position: absolute;
-          bottom: 10px;
-          left: 10px;
-          font-size: 10px;
-          color: #8b949e;
-        "
-      >
-        Left Click: Select Point &bull; Right Click: Move Selected Ship
-      </div>
-    </div>
-
-    <div id="sidebar">
-      <div class="section">
-        <h2>Sector Leaderboard</h2>
-        <ul id="leaderboard-list"></ul>
-      </div>
-
-      <div class="section">
-        <h2>Register New Ship</h2>
-        <input
-          type="text"
-          id="reg-team"
-          placeholder="Team Name (e.g. RedLeader)"
-        />
-        <button class="btn" onclick="registerShip()">Spawn Ship</button>
-      </div>
-
-      <div class="section">
-        <h2>My Fleet</h2>
-        <div
-          id="no-ships-msg"
-          style="font-size: 11px; color: #666; margin-bottom: 5px"
-        >
-          No ships under command.
-        </div>
-        <ul id="my-ships"></ul>
-      </div>
-
-      <div class="section">
-        <h2>Ship Controls</h2>
-
-        <div
-          style="
-            background: #21262d;
-            padding: 8px;
-            border-radius: 4px;
-            margin-bottom: 10px;
-          "
-        >
-          <div style="font-size: 11px; margin-bottom: 4px; color: #8b949e">
-            RADAR (Costs Fuel!)
-          </div>
-          <div style="display: flex; gap: 5px">
-            <input
-              type="number"
-              id="scan-radius"
-              value="200"
-              min="50"
-              max="800"
-              style="width: 60px"
-              placeholder="Radius"
-            />
-            <button
-              class="btn"
-              style="width: auto; flex-grow: 1"
-              onclick="performManualScan()"
-            >
-              SCAN AREA
-            </button>
-          </div>
-        </div>
-
-        <div style="font-size: 11px; margin-bottom: 5px">
-          Speed Setting: <span id="speed-val">50</span>
-        </div>
-        <input
-          type="range"
-          id="speed-slider"
-          min="0"
-          max="100"
-          value="50"
-          oninput="document.getElementById('speed-val').innerText = this.value"
-        />
-
-        <div
-          style="
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 5px;
-            margin-top: 10px;
-          "
-        >
-          <button class="btn" onclick="sendRefill()">Refill Fuel</button>
-          <button class="btn" onclick="sendUnload()">Unload Cargo</button>
-          <button class="btn" onclick="sendConfig(true)">AutoCollect ON</button>
-          <button class="btn" onclick="sendConfig(false)">
-            AutoCollect OFF
+    <div id="login-overlay">
+      <div class="login-box">
+        <div class="login-tabs">
+          <button class="tab-btn active" onclick="switchTab('login', event)">
+            Login
+          </button>
+          <button class="tab-btn" onclick="switchTab('register', event)">
+            Register Team
           </button>
         </div>
-        <button class="btn red" style="margin-top: 5px" onclick="sendDump()">
-          Dump Cargo (Emergency)
-        </button>
+        <div id="tab-login">
+          <div class="form-group">
+            <label>Access Token</label>
+            <input type="text" id="login-token" placeholder="cmd-xxxxxxxxx" />
+          </div>
+          <button class="btn btn-primary" onclick="app.login()">
+            Connect to Fleet
+          </button>
+        </div>
+        <div id="tab-register" class="hidden">
+          <div class="form-group">
+            <label>Token (Optional)</label>
+            <input
+              type="text"
+              id="reg-token"
+              placeholder="Leave empty to generate"
+            />
+          </div>
+          <div class="form-group">
+            <label>Team Name</label>
+            <input type="text" id="reg-team" placeholder="e.g. Red Squadron" />
+          </div>
+          <div class="form-group">
+            <label>Home Planet Name</label>
+            <input type="text" id="reg-planet" placeholder="e.g. Mars Base" />
+          </div>
+          <button class="btn btn-primary" onclick="app.registerTeam()">
+            Initialize Account
+          </button>
+        </div>
       </div>
-
-      <div id="log"></div>
     </div>
-
+    <div id="app-container">
+      <div id="game-view">
+        <div id="toast">Command Sent</div>
+        <canvas id="worldCanvas"></canvas>
+        <div
+          style="
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.4);
+            pointer-events: none;
+          "
+        >
+          L-Click: Select Point • R-Click: Move Ship • Wheel: Zoom
+        </div>
+      </div>
+      <div id="sidebar">
+        <div class="scroll-y">
+          <div class="card">
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+              "
+            >
+              <div>
+                <div style="font-size: 10px; color: #8b949e">COMMANDER</div>
+                <div
+                  style="font-size: 14px; font-weight: bold; color: #fff"
+                  id="hud-team-name"
+                >
+                  Unknown
+                </div>
+              </div>
+              <div style="text-align: right">
+                <div style="font-size: 10px; color: #8b949e">CREDITS</div>
+                <div
+                  style="
+                    color: #e3b341;
+                    font-family: monospace;
+                    font-size: 14px;
+                  "
+                  id="hud-credits"
+                >
+                  0
+                </div>
+              </div>
+            </div>
+            <div
+              style="
+                margin-top: 10px;
+                border-top: 1px solid #30363d;
+                padding-top: 8px;
+              "
+            >
+              <label>Auth Token</label>
+              <div class="flex-row">
+                <input
+                  type="text"
+                  id="hud-token"
+                  readonly
+                  style="font-size: 10px; padding: 4px"
+                />
+                <button
+                  class="btn"
+                  style="width: auto; padding: 4px 8px; font-size: 10px"
+                  onclick="app.copyToken()"
+                >
+                  Copy
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <h2>Shipyard</h2>
+            <div class="flex-row">
+              <input
+                type="text"
+                id="new-ship-name"
+                placeholder="New Ship Name"
+              />
+              <button
+                class="btn btn-primary"
+                style="width: auto"
+                onclick="app.constructShip()"
+              >
+                Build
+              </button>
+            </div>
+          </div>
+          <div class="card">
+            <h2>Fleet</h2>
+            <div id="fleet-list-container">
+              <p style="font-size: 11px; color: #666; font-style: italic">
+                No ships under command.
+              </p>
+            </div>
+          </div>
+          <div class="card">
+            <h2>Long Range Scanners</h2>
+            <div class="flex-row">
+              <input
+                type="number"
+                id="scan-radius"
+                value="200"
+                min="50"
+                max="1000"
+                placeholder="Radius"
+              />
+              <button class="btn" style="width: auto" onclick="app.scan()">
+                Scan
+              </button>
+            </div>
+          </div>
+          <div class="card">
+            <h2>Sector Leaderboard</h2>
+            <ul id="leaderboard" class="ship-list"></ul>
+          </div>
+        </div>
+        <div id="log-panel">
+          <div class="log-line">> System initialized...</div>
+        </div>
+      </div>
+    </div>
     <script>
-      // STATE
-      const GAME_CONFIG = { width: 1000, height: 1000 };
-      let worldData = null;
+      const $ = (id) => document.getElementById(id);
 
-      // Local fleet storage: Token -> {id, team}
-      let myFleet = JSON.parse(localStorage.getItem("rivers_fleet")) || {};
-      let selectedToken = null;
-
-      // Fog of War: Resources found via scan
-      const knownResources = new Map();
-
-      let leaderboardData = [];
-      let ws = null;
-
-      // Fast lookup maps for applying deltas
-      const worldIndex = {
-        shipsById: new Map(),
-        missionsById: new Map(),
-        stationsById: new Map(),
+      const log = (msg, type = "normal") => {
+        const div = document.createElement("div");
+        const time = new Date().toLocaleTimeString([], { hour12: false });
+        div.className = `log-line ${type === "error" ? "log-err" : type === "success" ? "log-success" : ""}`;
+        div.innerText = `[${time}] ${msg}`;
+        const p = $("log-panel");
+        p.prepend(div);
       };
 
-      // --- OPTIMISTIC RENDER STATE (dead-reckoning) ---
-      // shipId -> {
-      //    shipId, teamName, fuel, headingDeg, speed,
-      //    serverX, serverY, serverAtMs,
-      //    x, y (rendered)
-      // }
-      const renderShips = new Map();
+      function getOreColor(oreId) {
+        if (!oreId) {
+          return "#a371f7";
+        }
+        const id = String(oreId).toLowerCase();
 
-      // Tuning
-      const MAX_PREDICT_SECONDS = 1.2; // clamp (prevents huge leaps if tab lags)
-      const SNAP_ERROR = 120; // if server disagrees by more than this, snap
-
-      function nowMs() {
-        return performance.now();
-      }
-
-      // headingDeg: 0 = up, 90 = right
-      function headingToDir(headingDeg) {
-        const a = (headingDeg * Math.PI) / 180;
-        return { vx: Math.sin(a), vy: -Math.cos(a) };
-      }
-
-      function upsertShipFromServer(s) {
-        const t = nowMs();
-
-        worldIndex.shipsById.set(s.shipId, s);
-
-        const r = renderShips.get(s.shipId);
-        if (!r) {
-          renderShips.set(s.shipId, {
-            shipId: s.shipId,
-            teamName: s.teamName,
-            fuel: s.fuel,
-            headingDeg: s.headingDeg,
-            speed: s.speed,
-            serverX: s.x,
-            serverY: s.y,
-            serverAtMs: t,
-            x: s.x,
-            y: s.y,
-          });
-          return;
+        if (id.includes("iron")) {
+          return "#b0b0b0";
+        }
+        if (id.includes("diamond")) {
+          return "#4fd1ff";
+        }
+        if (id.includes("gold")) {
+          return "#e3b341";
         }
 
-        // Update metadata
-        r.teamName = s.teamName;
-        r.fuel = s.fuel;
-        r.headingDeg = s.headingDeg;
-        r.speed = s.speed;
-
-        // Compute current predicted pos from old anchor to see how far off
-        const dtOld = Math.min(
-          MAX_PREDICT_SECONDS,
-          Math.max(0, (t - r.serverAtMs) / 1000),
-        );
-        const dirOld = headingToDir(r.headingDeg || 0);
-        const predOldX = r.serverX + dirOld.vx * (r.speed || 0) * dtOld;
-        const predOldY = r.serverY + dirOld.vy * (r.speed || 0) * dtOld;
-
-        const err = Math.hypot(s.x - predOldX, s.y - predOldY);
-
-        // Reset anchor to the new authoritative point/time
-        r.serverX = s.x;
-        r.serverY = s.y;
-        r.serverAtMs = t;
-
-        // If we way off (respawn / collision / missed updates), snap render too.
-        // Otherwise: do nothing, dead-reckoning fixes itself
-        if (err > SNAP_ERROR) {
-          r.x = s.x;
-          r.y = s.y;
-        }
+        return "#a371f7";
       }
 
-      function updateOptimisticShips() {
-        const t = nowMs();
+      const state = {
+        token: localStorage.getItem("rr_token") || "",
+        team: null,
+        myShips: [],
+        selectedShipId: null,
+        world: {
+          width: 1000,
+          height: 1000,
+          homeX: 500,
+          homeY: 500,
+          ships: [],
+          resources: [],
+          missions: [],
+          stations: [],
+        },
+        renderShips: new Map(),
+        knownResources: new Map(),
+      };
 
-        for (const r of renderShips.values()) {
-          const dt = Math.min(
-            MAX_PREDICT_SECONDS,
-            Math.max(0, (t - r.serverAtMs) / 1000),
-          );
-          const dir = headingToDir(r.headingDeg || 0);
-
-          const predX = r.serverX + dir.vx * (r.speed || 0) * dt;
-          const predY = r.serverY + dir.vy * (r.speed || 0) * dt;
-
-          r.x = Math.max(0, Math.min(GAME_CONFIG.width, predX));
-          r.y = Math.max(0, Math.min(GAME_CONFIG.height, predY));
-        }
-      }
-
-      function getRenderedShipsArray() {
-        return Array.from(renderShips.values()).map((r) => ({
-          shipId: r.shipId,
-          teamName: r.teamName,
-          x: r.x,
-          y: r.y,
-          headingDeg: r.headingDeg,
-          speed: r.speed,
-          fuel: r.fuel,
-        }));
-      }
-
-      // CANVAS
-      const canvas = document.getElementById("worldCanvas");
-      const ctx = canvas.getContext("2d");
-      let scaleFactor = 1.0;
-
-      function resize() {
-        const size = Math.min(window.innerWidth, window.innerHeight) - 40;
-        canvas.width = size;
-        canvas.height = size;
-        scaleFactor = size / GAME_CONFIG.width;
-        render();
-      }
-      window.addEventListener("resize", resize);
-
-      // LOGGING
-      function log(msg, type = "normal") {
-        const div = document.createElement("div");
-        div.className =
-          "log-entry " +
-          (type === "error"
-            ? "log-error"
-            : type === "success"
-              ? "log-success"
-              : "");
-        div.innerText = `> ${msg}`;
-        const logBox = document.getElementById("log");
-        logBox.prepend(div);
-      }
-
-      // API CALLS
-      async function registerShip() {
-        const team = document.getElementById("reg-team").value || "Anon";
-        const token = "cmd-" + Math.random().toString(36).substr(2, 9);
-
-        try {
-          const res = await fetch("/ships/register", {
+      const api = {
+        async post(url, body, options = {}) {
+          const res = await fetch(url, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ token: token, teamName: team }),
+            headers: {
+              "Content-Type": "application/json",
+              "X-Token": state.token,
+            },
+            body: JSON.stringify(body),
           });
-
-          if (res.ok) {
-            const data = await res.json();
-            myFleet[token] = { id: data.shipId, team: team };
-            localStorage.setItem("rivers_fleet", JSON.stringify(myFleet));
-            log(`Registered ${team}`, "success");
-            renderFleetList();
-            selectShip(token);
-          } else {
-            const err = await safeJson(res);
-            log(`Registration failed: ${err?.message || res.status}`, "error");
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err.message || res.statusText);
           }
-        } catch (e) {
-          log("Net error: " + e.message, "error");
-        }
-      }
-
-      async function setCourse(x, y) {
-        if (!selectedToken) {
-          log("No ship selected!", "error");
-          return;
-        }
-        const speed = parseInt(document.getElementById("speed-slider").value);
-
-        showToast(`Moving to ${Math.round(x)},${Math.round(y)}`);
-
-        // small hack for smoother rendering on new command; reset prediction clock
-        const shipId = myFleet[selectedToken]?.id;
-        if (shipId && renderShips.has(shipId)) {
-          const r = renderShips.get(shipId);
-          r.serverX = r.x;
-          r.serverY = r.y;
-          r.serverAtMs = nowMs();
-          r.speed = speed;
-        }
-
-        await fetch("/ships/me/course", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-Token": selectedToken,
-          },
-          body: JSON.stringify({ targetX: x, targetY: y, speed: speed }),
-        });
-      }
-
-      async function sendRefill() {
-        if (!selectedToken) return;
-        await fetch("/ships/me/refill", {
-          method: "POST",
-          headers: { "X-Token": selectedToken },
-        });
-        log("Refill command sent");
-      }
-
-      async function performManualScan() {
-        if (!selectedToken) {
-          log("Select a ship first!", "error");
-          return;
-        }
-
-        const radius = document.getElementById("scan-radius").value;
-
-        try {
-          showToast("Scanning...");
-          const res = await fetch(`/scan?radius=${radius}`, {
-            method: "GET",
-            headers: { "X-Token": selectedToken },
-          });
-
-          if (res.ok) {
-            const data = await res.json();
-
-            let count = 0;
-            if (data.resources) {
-              data.resources.forEach((r) => {
-                knownResources.set(r.id, r);
-                count++;
-              });
-            }
-            log(`Scan complete. Found ${count} resources.`, "success");
-            render();
-          } else {
-            log("Scan failed (Low Fuel?)", "error");
-          }
-        } catch (e) {
-          log("Net error: " + e.message, "error");
-        }
-      }
-
-      async function sendUnload() {
-        if (!selectedToken) return;
-        const res = await fetch("/ships/me/unload", {
-          method: "POST",
-          headers: { "X-Token": selectedToken },
-        });
-
-        if (res.ok) {
-          const data = await res.json();
-          const items = data.items ?? data.itemsSold ?? 0;
-          const value = data.value ?? data.earned ?? 0;
-          const total = data.totalCredits ?? data.credits ?? null;
-          log(
-            `Sold ${items} items for $${value}` +
-              (total != null ? ` (Total: $${total})` : ""),
-            "success",
-          );
-        } else {
-          const err = await safeJson(res);
-          log(`Unload fail: ${err?.message || res.status}`, "error");
-        }
-      }
-
-      async function sendDump() {
-        if (!selectedToken) return;
-        if (confirm("Dump all cargo into space?")) {
-          await fetch("/ships/me/dump", {
-            method: "POST",
-            headers: { "X-Token": selectedToken },
-          });
-          log("Cargo dumped");
-        }
-      }
-
-      async function sendConfig(autoCollect) {
-        if (!selectedToken) return;
-        await fetch("/ships/me/config", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-Token": selectedToken,
-          },
-          body: JSON.stringify({ autoCollect: autoCollect }),
-        });
-        log(`AutoCollect set to ${autoCollect}`);
-      }
-
-      async function fetchLeaderboard() {
-        try {
-          const res = await fetch("/leaderboard");
-          if (res.ok) {
-            leaderboardData = await res.json();
-            renderLeaderboard();
-          }
-        } catch (e) {}
-      }
-
-      async function fetchInitialSnapshotFallback() {
-        try {
-          const response = await fetch("/world/snapshot");
-          if (response.ok) {
-            const snap = await response.json();
-            applySnapshot(snap);
-          }
-        } catch (e) {}
-      }
-
-      async function safeJson(res) {
-        try {
-          return await res.json();
-        } catch {
-          return null;
-        }
-      }
-
-      // WEBSOCKET WORLD STREAMING
-      function connectWorldWs() {
-        const proto = window.location.protocol === "https:" ? "wss" : "ws";
-        const url = `${proto}://${window.location.host}/ws/world`;
-
-        ws = new WebSocket(url);
-
-        ws.onopen = () => log("World connected!", "success");
-
-        ws.onclose = () => {
-          log("World stream disconnected, retrying...", "error");
-          setTimeout(connectWorldWs, 1500);
-        };
-
-        ws.onmessage = (evt) => {
-          let msg;
-          try {
-            msg = JSON.parse(evt.data);
-          } catch {
+          if (options.noBody) {
             return;
           }
-          if (!msg || !msg.type) return;
-
-          if (msg.type === "snapshot") applySnapshot(msg.payload);
-          else if (msg.type === "delta") applyDelta(msg.payload);
-        };
-      }
-
-      function applySnapshot(snap) {
-        worldData = {
-          width: snap.width ?? 1000,
-          height: snap.height ?? 1000,
-          homeX: snap.homeX ?? 500,
-          homeY: snap.homeY ?? 500,
-          refillRadius: snap.refillRadius ?? 40,
-          ships: snap.ships || [],
-          stations: snap.stations || [],
-          missions: snap.missions || [],
-          resources: [], // Kept empty, used from memory
-        };
-
-        GAME_CONFIG.width = worldData.width || 1000;
-        GAME_CONFIG.height = worldData.height || 1000;
-
-        rebuildIndexes();
-
-        const seen = new Set();
-        for (const s of worldData.ships) {
-          seen.add(s.shipId);
-          upsertShipFromServer(s);
-        }
-        for (const id of Array.from(renderShips.keys())) {
-          if (!seen.has(id)) renderShips.delete(id);
-        }
-
-        if (Math.abs(canvas.width / scaleFactor - GAME_CONFIG.width) > 1)
-          resize();
-        renderFleetList();
-      }
-
-      function rebuildIndexes() {
-        worldIndex.shipsById.clear();
-        worldIndex.missionsById.clear();
-        worldIndex.stationsById.clear();
-
-        for (const s of worldData.ships) worldIndex.shipsById.set(s.shipId, s);
-        for (const m of worldData.missions)
-          worldIndex.missionsById.set(m.id, m);
-        for (const st of worldData.stations)
-          worldIndex.stationsById.set(st.id, st);
-      }
-
-      function applyDelta(delta) {
-        if (!worldData) return;
-        const ops = delta.ops || [];
-        if (ops.length === 0) return;
-
-        for (const op of ops) {
-          if (op.ship) {
-            upsertShipFromServer(op.ship);
-          } else if (op.mission) {
-            worldIndex.missionsById.set(op.mission.id, op.mission);
-          } else if (op.id && !op.oreId && !op.value && !op.x && !op.y) {
-            worldIndex.missionsById.delete(op.id);
-            // We can optionally remove from knownResources if we knew it was gone,
-            // but for simple Fog of War, we often leave it until re-scanned.
-            knownResources.delete(op.id);
+          return res.json();
+        },
+        async get(url) {
+          const res = await fetch(url, { headers: { "X-Token": state.token } });
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err.message || res.statusText);
           }
-        }
+          return res.json();
+        },
+      };
 
-        worldData.ships = Array.from(worldIndex.shipsById.values());
-        worldData.missions = Array.from(worldIndex.missionsById.values());
-      }
+      const app = {
+        init() {
+          if (state.token) $("login-token").value = state.token;
+          renderer.init();
+          requestAnimationFrame(loopRender);
+          setInterval(app.fetchLeaderboard, 3000);
+          setInterval(app.refreshMyShips, 3000);
+          wsClient.connect();
+        },
 
-      // GAME LOOP
-      function loop() {
-        updateOptimisticShips();
-        render();
-        requestAnimationFrame(loop);
-      }
-
-      setInterval(fetchLeaderboard, 2000);
-
-      // init
-      resize();
-      renderFleetList();
-      fetchInitialSnapshotFallback();
-      connectWorldWs();
-      loop();
-
-      // UI LOGIC
-      function renderLeaderboard() {
-        const list = document.getElementById("leaderboard-list");
-
-        if (!leaderboardData || leaderboardData.length === 0) {
-          list.innerHTML =
-            '<li style="padding:5px; color:#666; font-style:italic; font-size:11px;">No data</li>';
-          return;
-        }
-
-        list.innerHTML = "";
-
-        const myTeamNames = Object.values(myFleet).map((s) => s.team);
-
-        leaderboardData.forEach((entry, index) => {
-          const rank = index + 1;
-          const li = document.createElement("li");
-          li.className = `lb-item rank-${rank}`;
-
-          if (myTeamNames.includes(entry.team))
-            li.style.background = "rgba(56, 139, 253, 0.1)";
-
-          li.innerHTML = `
-            <span class="lb-rank">#${rank}</span>
-            <span class="lb-name">${entry.team}</span>
-            <span class="lb-score">$${entry.score}</span>
-          `;
-          list.appendChild(li);
-        });
-      }
-
-      function renderFleetList() {
-        const list = document.getElementById("my-ships");
-        list.innerHTML = "";
-        const keys = Object.keys(myFleet);
-
-        document.getElementById("no-ships-msg").style.display =
-          keys.length === 0 ? "block" : "none";
-
-        keys.forEach((token) => {
-          const shipInfo = myFleet[token];
-          const li = document.createElement("li");
-          li.className =
-            "ship-item " + (selectedToken === token ? "active" : "");
-          li.onclick = () => selectShip(token);
-
-          let liveInfo = "Offline";
-          let fuel = 0;
-
-          const r = renderShips.get(shipInfo.id);
-          if (r) {
-            liveInfo = `(${Math.round(r.x)}, ${Math.round(r.y)})`;
-            fuel = Math.round(r.fuel || 0);
+        async login() {
+          const token = $("login-token").value.trim();
+          if (!token) {
+            log("Token required", "error");
+            return;
           }
+          state.token = token;
+          try {
+            const ships = await api.get("/ships/me");
+            localStorage.setItem("rr_token", state.token);
+            state.myShips = ships;
+            if (ships.length > 0) {
+              state.team = ships[0].teamName;
+              state.selectedShipId = ships[0].shipId;
+            } else {
+              state.team = "Commander";
+            }
+            ui.hideLogin();
+            ui.updateHud();
+            ui.renderFleet();
+            log("Login successful.", "success");
+          } catch (e) {
+            log(`Login failed: ${e.message}`, "error");
+          }
+        },
 
-          li.innerHTML = `
-            <div><strong>${shipInfo.team}</strong></div>
-            <div class="ship-status">
-              <span>${liveInfo}</span>
-              <span>Fuel: ${fuel}</span>
-            </div>
-          `;
-          list.appendChild(li);
-        });
+        async registerTeam() {
+          const token =
+            $("reg-token").value.trim() ||
+            "cmd-" + Math.random().toString(36).substr(2, 9);
+          const team = $("reg-team").value.trim() || "Anon";
+          const planet = $("reg-planet").value.trim() || `${team} Prime`;
+          try {
+            const res = await fetch("/ships/teams/register", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                token,
+                teamName: team,
+                planetName: planet,
+              }),
+            });
+            if (!res.ok) {
+              const err = await res.json().catch(() => ({}));
+              throw new Error(err.message || "Registration failed");
+            }
+            state.token = token;
+            state.team = team;
+            state.myShips = [];
+            localStorage.setItem("rr_token", token);
+            log("Team registered! Construct your first ship.", "success");
+            ui.hideLogin();
+            ui.updateHud();
+            ui.renderFleet();
+          } catch (e) {
+            log(`Registration error: ${e.message}`, "error");
+          }
+        },
+
+        async constructShip() {
+          const name = $("new-ship-name").value.trim();
+          if (!name) {
+            log("Ship name required", "error");
+            return;
+          }
+          try {
+            const res = await api.post("/ships/register", { shipName: name });
+            state.myShips.push(res);
+            if (!state.selectedShipId) state.selectedShipId = res.shipId;
+            ui.renderFleet();
+            $("new-ship-name").value = "";
+            log(`Constructed: ${name}`, "success");
+          } catch (e) {
+            log(`Build failed: ${e.message}`, "error");
+          }
+        },
+
+        async setCourse(x, y) {
+          if (!state.selectedShipId) {
+            log("Select a ship from Fleet first", "error");
+            return;
+          }
+          try {
+            await api.post(
+              "/ships/course",
+              { shipId: state.selectedShipId, targetX: x, targetY: y },
+              { noBody: true },
+            );
+            ui.toast("Coordinates Sent");
+            renderer.targetReticle = { x, y, time: Date.now() };
+          } catch (e) {
+            log(`Navigation error: ${e.message}`, "error");
+          }
+        },
+
+        async scan() {
+          try {
+            const r = $("scan-radius").value;
+            ui.toast("Scanning...");
+            const res = await api.get(`/scan?radius=${encodeURIComponent(r)}`);
+
+            const ships = Array.isArray(res.ships) ? res.ships : [];
+            const resources = Array.isArray(res.resources) ? res.resources : [];
+
+            log(
+              `Scan complete: ${ships.length} ships, ${resources.length} resources found.`,
+              "success",
+            );
+
+            resources.forEach((resItem) => {
+              state.knownResources.set(resItem.id, resItem);
+            });
+
+            app.refreshMyShips();
+          } catch (e) {
+            log(`Scan failed: ${e.message}`, "error");
+          }
+        },
+
+        async fetchLeaderboard() {
+          try {
+            const url = `/leaderboard?ts=${Date.now()}`;
+            const res = await fetch(url, {
+              headers: { "Cache-Control": "no-cache" },
+            }).then((r) => r.json());
+            ui.renderLeaderboard(res);
+          } catch (e) {}
+        },
+
+        async refreshMyShips() {
+          if (!state.token) return;
+          try {
+            const ships = await api.get("/ships/me");
+            state.myShips = ships;
+            if (!ships.some((s) => s.shipId === state.selectedShipId)) {
+              state.selectedShipId = ships.length > 0 ? ships[0].shipId : null;
+            }
+            ui.updateHud();
+            ui.renderFleet();
+          } catch (e) {}
+        },
+
+        copyToken() {
+          if (!state.token) return;
+          navigator.clipboard.writeText(state.token).catch(() => {});
+          ui.toast("Token Copied");
+        },
+      };
+
+      const ui = {
+        hideLogin() {
+          $("login-overlay").style.display = "none";
+        },
+
+        updateHud() {
+          $("hud-team-name").innerText = state.team || "Unknown";
+          $("hud-token").value = state.token || "";
+          if (state.myShips.length > 0) {
+            $("hud-credits").innerText = (
+              state.myShips[0].teamCredits || 0
+            ).toLocaleString();
+          }
+        },
+
+        renderFleet() {
+          const list = $("fleet-list-container");
+          list.innerHTML = "";
+          if (state.myShips.length === 0) {
+            list.innerHTML =
+              '<p style="font-size:11px; color:#666; font-style:italic;">No ships.</p>';
+            return;
+          }
+          const ul = document.createElement("ul");
+          ul.className = "ship-list";
+          state.myShips.forEach((s) => {
+            const live = state.renderShips.get(s.shipId) || s;
+            const li = document.createElement("li");
+            li.className = `ship-item ${s.shipId === state.selectedShipId ? "active" : ""}`;
+            li.onclick = () => {
+              state.selectedShipId = s.shipId;
+              ui.renderFleet();
+            };
+            const nameLabel =
+              live.displayName || s.displayName || s.teamName || "Ship";
+            const posX = Math.round(live.x || 0);
+            const posY = Math.round(live.y || 0);
+            li.innerHTML = `
+              <div>
+                  <div style="font-weight:bold; font-size:12px; color:#e6edf3;">${nameLabel}</div>
+                  <div style="font-size:10px; color:#8b949e; font-family:monospace;">
+                      POS: ${posX},${posY}
+                  </div>
+              </div>
+              <div style="text-align:right;">
+                  <div style="font-size:10px; color:${s.shipId === state.selectedShipId ? "#58a6ff" : "#30363d"}">CMD</div>
+              </div>
+            `;
+            ul.appendChild(li);
+          });
+          list.appendChild(ul);
+        },
+
+        renderLeaderboard(data) {
+          const el = $("leaderboard");
+          el.innerHTML = data
+            .map(
+              (t, idx) => `
+            <li class="ship-item" style="padding:4px 8px; cursor:default; border:none; border-bottom:1px solid #21262d;">
+              <span class="lb-rank">#${idx + 1}</span>
+              <span class="lb-name">${t.team}</span>
+              <span class="lb-score">${t.score}</span>
+            </li>
+          `,
+            )
+            .join("");
+        },
+
+        toast(msg) {
+          const t = $("toast");
+          t.innerText = msg;
+          t.style.opacity = 1;
+          setTimeout(() => (t.style.opacity = 0), 2000);
+        },
+      };
+
+      const wsClient = {
+        socket: null,
+
+        connect() {
+          const proto = location.protocol === "https:" ? "wss" : "ws";
+          const url = `${proto}://${location.host}/ws/world`;
+          this.socket = new WebSocket(url);
+
+          this.socket.onopen = () => {
+            log("Uplink established.", "success");
+          };
+
+          this.socket.onclose = () => {
+            setTimeout(() => this.connect(), 2000);
+          };
+
+          this.socket.onmessage = (e) => {
+            let msg;
+            try {
+              msg = JSON.parse(e.data);
+            } catch {
+              return;
+            }
+            if (msg.type === "snapshot") {
+              state.world = msg.payload;
+              renderer.resize();
+              this.syncRenderState(state.world.ships || []);
+            }
+            if (msg.type === "delta") {
+              const ops = (msg.payload && msg.payload.ops) || [];
+              ops.forEach((op) => {
+                if (op.ship) {
+                  upsert(state.world.ships, op.ship, "shipId");
+                  this.updateShipRender(op.ship);
+                }
+                if (op.resource) {
+                  state.knownResources.set(op.resource.id, op.resource);
+                }
+                if (op.id && !op.ship && !op.resource) {
+                  state.knownResources.delete(op.id);
+                }
+              });
+            }
+          };
+        },
+
+        updateShipRender(serverShip) {
+          const now = Date.now();
+          const existing = state.renderShips.get(serverShip.shipId);
+          if (!existing) {
+            state.renderShips.set(serverShip.shipId, {
+              ...serverShip,
+              serverX: serverShip.x,
+              serverY: serverShip.y,
+              lastUpdate: now,
+            });
+            return;
+          }
+          const dx = serverShip.x - existing.x;
+          const dy = serverShip.y - existing.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist > 100) {
+            existing.x = serverShip.x;
+            existing.y = serverShip.y;
+          }
+          existing.serverX = serverShip.x;
+          existing.serverY = serverShip.y;
+          existing.speed = serverShip.speed;
+          existing.headingDeg = serverShip.headingDeg;
+          existing.lastUpdate = now;
+          existing.teamName = serverShip.teamName;
+          existing.displayName = serverShip.displayName || existing.displayName;
+        },
+
+        syncRenderState(serverShips) {
+          (serverShips || []).forEach((s) => this.updateShipRender(s));
+        },
+      };
+
+      function upsert(arr, item, key) {
+        if (!arr) return;
+        const idx = arr.findIndex((x) => x[key] === item[key]);
+        if (idx > -1) arr[idx] = item;
+        else arr.push(item);
       }
 
-      function selectShip(token) {
-        selectedToken = token;
-        renderFleetList();
-      }
+      const renderer = {
+        canvas: $("worldCanvas"),
+        ctx: null,
+        scale: 1,
+        targetReticle: null,
 
-      function showToast(msg) {
-        const t = document.getElementById("toast");
-        t.innerText = msg;
-        t.style.opacity = "1";
-        setTimeout(() => (t.style.opacity = "0"), 2000);
-      }
+        init() {
+          this.ctx = this.canvas.getContext("2d");
+          window.addEventListener("resize", () => this.resize());
+          this.resize();
 
-      // INPUT HANDLING
-      canvas.addEventListener("contextmenu", (e) => {
-        e.preventDefault();
-        const rect = canvas.getBoundingClientRect();
-        const x = (e.clientX - rect.left) / scaleFactor;
-        const y = (e.clientY - rect.top) / scaleFactor;
-        setCourse(x, y);
-      });
+          this.canvas.addEventListener("contextmenu", (e) => {
+            e.preventDefault();
+            const r = this.canvas.getBoundingClientRect();
+            const x = (e.clientX - r.left) / this.scale;
+            const y = (e.clientY - r.top) / this.scale;
+            app.setCourse(x, y);
+          });
 
-      // RENDERING
-      function render() {
-        ctx.fillStyle = "#010409";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+          this.canvas.addEventListener("mousedown", (e) => {
+            if (e.button !== 0) return;
+            const r = this.canvas.getBoundingClientRect();
+            const x = (e.clientX - r.left) / this.scale;
+            const y = (e.clientY - r.top) / this.scale;
+            let clickedId = null;
+            for (const [id, s] of state.renderShips) {
+              const dist = Math.hypot(s.x - x, s.y - y);
+              if (dist < 15) {
+                clickedId = id;
+                break;
+              }
+            }
+            if (
+              clickedId &&
+              state.myShips.some((m) => m.shipId === clickedId)
+            ) {
+              state.selectedShipId = clickedId;
+              ui.renderFleet();
+            }
+          });
+        },
 
-        drawGrid();
+        resize() {
+          const container = $("game-view");
+          const w = container.clientWidth;
+          const h = container.clientHeight;
+          const size = Math.min(w, h) - 20;
+          this.canvas.width = size;
+          this.canvas.height = size;
+          this.scale = size / (state.world.width || 1000);
+        },
 
-        if (!worldData) {
-          ctx.fillStyle = "white";
-          ctx.fillText("Connecting...", 20, 20);
-          return;
-        }
+        draw() {
+          const ctx = this.ctx;
+          const w = this.canvas.width;
+          const h = this.canvas.height;
+          const now = Date.now();
 
-        drawBase(worldData.homeX, worldData.homeY, worldData.refillRadius);
+          ctx.fillStyle = "#010409";
+          ctx.fillRect(0, 0, w, h);
 
-        for (const st of worldData.stations || []) {
-          const dx = st.x - worldData.homeX;
-          const dy = st.y - worldData.homeY;
-          if (Math.hypot(dx, dy) < 5) continue;
-          drawStation(st);
-        }
-
-        (worldData.missions || []).forEach(drawMission);
-
-        // Draw Known Resources (Fog of War)
-        knownResources.forEach(drawResource);
-
-        const shipsToDraw = getRenderedShipsArray();
-
-        shipsToDraw.forEach((s) => {
-          const isMine = Object.values(myFleet).some((f) => f.id === s.shipId);
-          const isSelected =
-            selectedToken &&
-            myFleet[selectedToken] &&
-            myFleet[selectedToken].id === s.shipId;
-          drawShip(s, isMine, isSelected);
-        });
-
-        if (Math.random() < 0.08) renderFleetList();
-      }
-
-      function drawGrid() {
-        ctx.strokeStyle = "#161b22";
-        ctx.lineWidth = 1;
-        const step = 100 * scaleFactor;
-        ctx.beginPath();
-        for (let i = 0; i < canvas.width; i += step) {
-          ctx.moveTo(i, 0);
-          ctx.lineTo(i, canvas.height);
-        }
-        for (let i = 0; i < canvas.height; i += step) {
-          ctx.moveTo(0, i);
-          ctx.lineTo(canvas.width, i);
-        }
-        ctx.stroke();
-      }
-
-      function drawBase(x, y, r) {
-        const sX = x * scaleFactor,
-          sY = y * scaleFactor,
-          sR = r * scaleFactor;
-        ctx.strokeStyle = "#388bfd";
-        ctx.fillStyle = "rgba(56, 139, 253, 0.05)";
-        ctx.beginPath();
-        ctx.arc(sX, sY, sR, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.stroke();
-        ctx.fillStyle = "#388bfd";
-        ctx.fillText("BASE", sX - 12, sY - 5);
-      }
-
-      function drawStation(st) {
-        const sX = st.x * scaleFactor;
-        const sY = st.y * scaleFactor;
-
-        ctx.fillStyle = "#8b949e";
-        ctx.fillRect(sX - 4, sY - 4, 8, 8);
-
-        ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
-        ctx.font = "10px monospace";
-        ctx.textAlign = "center";
-        ctx.fillText(st.name || "Station", sX, sY - 8);
-        ctx.textAlign = "start";
-      }
-
-      function drawMission(m) {
-        const pulse = (Math.sin(Date.now() / 150) + 1) * 3;
-        ctx.strokeStyle = "#d2a8ff";
-        ctx.beginPath();
-        ctx.arc(
-          m.x * scaleFactor,
-          m.y * scaleFactor,
-          4 + pulse,
-          0,
-          Math.PI * 2,
-        );
-        ctx.stroke();
-      }
-
-      function drawResource(r) {
-        const ore = (r.oreId || r.type || "").toUpperCase();
-
-        let c = "#fff";
-        if (ore === "IRON") c = "#a371f7";
-        if (ore === "GOLD") c = "#e3b341";
-        if (ore === "DIAMOND") c = "#58a6ff";
-        if (ore.startsWith("CRATE")) c = "#3fb950";
-
-        ctx.fillStyle = c;
-        ctx.beginPath();
-        ctx.arc(r.x * scaleFactor, r.y * scaleFactor, 3, 0, Math.PI * 2);
-        ctx.fill();
-      }
-
-      function drawShip(s, isMine, isSelected) {
-        const x = s.x * scaleFactor,
-          y = s.y * scaleFactor;
-
-        ctx.save();
-        ctx.translate(x, y);
-
-        if (isSelected) {
-          ctx.strokeStyle = "#fff";
+          ctx.strokeStyle = "#161b22";
           ctx.lineWidth = 1;
+          const step = 100 * this.scale;
           ctx.beginPath();
-          ctx.arc(0, 0, 10, 0, Math.PI * 2);
+          for (let i = 0; i <= w; i += step) {
+            ctx.moveTo(i, 0);
+            ctx.lineTo(i, h);
+          }
+          for (let i = 0; i <= h; i += step) {
+            ctx.moveTo(0, i);
+            ctx.lineTo(w, i);
+          }
           ctx.stroke();
-        }
 
-        ctx.fillStyle = isMine ? "#58a6ff" : "#8b949e";
-        ctx.font = "10px monospace";
-        ctx.fillText(s.teamName, 12, 3);
+          state.renderShips.forEach((ship) => {
+            const age = (now - ship.lastUpdate) / 1000;
+            if (age < 2.0 && ship.speed > 0) {
+              const rad = (ship.headingDeg * Math.PI) / 180;
+              const projectedX =
+                ship.serverX + Math.sin(rad) * ship.speed * age;
+              const projectedY =
+                ship.serverY - Math.cos(rad) * ship.speed * age;
+              const alpha = 0.1;
+              ship.x = ship.x + (projectedX - ship.x) * alpha;
+              ship.y = ship.y + (projectedY - ship.y) * alpha;
+            } else {
+              const alpha = 0.1;
+              ship.x = ship.x + (ship.serverX - ship.x) * alpha;
+              ship.y = ship.y + (ship.serverY - ship.y) * alpha;
+            }
+          });
 
-        ctx.rotate((s.headingDeg * Math.PI) / 180);
+          const homeX = (state.world.homeX || 500) * this.scale;
+          const homeY = (state.world.homeY || 500) * this.scale;
+          ctx.strokeStyle = "#238636";
+          ctx.beginPath();
+          ctx.arc(homeX, homeY, 40 * this.scale, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.fillStyle = "#238636";
+          ctx.font = "10px monospace";
+          ctx.fillText("BASE", homeX - 10, homeY + 4);
 
-        ctx.fillStyle = isMine ? "#388bfd" : "#8b949e";
-        if (isSelected) ctx.fillStyle = "#ffffff";
+          ctx.fillStyle = "#8b949e";
+          (state.world.stations || []).forEach((s) => {
+            const sx = s.x * this.scale;
+            const sy = s.y * this.scale;
+            ctx.fillRect(sx - 4, sy - 4, 8, 8);
+            ctx.fillStyle = "#fff";
+            ctx.font = "10px sans-serif";
+            ctx.fillText(
+              s.name,
+              sx - ctx.measureText(s.name).width / 2,
+              sy - 8,
+            );
+            ctx.fillStyle = "#8b949e";
+          });
 
-        ctx.beginPath();
-        ctx.moveTo(0, -8);
-        ctx.lineTo(6, 6);
-        ctx.lineTo(0, 3);
-        ctx.lineTo(-6, 6);
-        ctx.closePath();
-        ctx.fill();
+          const allResources = [
+            ...(state.world.resources || []),
+            ...state.knownResources.values(),
+          ];
+          allResources.forEach((r) => {
+            const rx = r.x * this.scale;
+            const ry = r.y * this.scale;
+            const color = getOreColor(r.oreId || r.id);
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.arc(rx, ry, 3, 0, Math.PI * 2);
+            ctx.fill();
+          });
+          state.renderShips.forEach((s) => {
+            const x = s.x * this.scale;
+            const y = s.y * this.scale;
+            const isMine = state.myShips.some((my) => my.shipId === s.shipId);
+            const isSelected = state.selectedShipId === s.shipId;
 
-        ctx.restore();
+            ctx.save();
+            ctx.translate(x, y);
+
+            if (isSelected) {
+              ctx.strokeStyle = "#fff";
+              ctx.lineWidth = 1;
+              ctx.beginPath();
+              ctx.arc(0, 0, 14, 0, Math.PI * 2);
+              ctx.stroke();
+            }
+
+            ctx.rotate((s.headingDeg * Math.PI) / 180);
+            ctx.fillStyle = isMine ? "#58a6ff" : "#30363d";
+            ctx.beginPath();
+            ctx.moveTo(0, -7);
+            ctx.lineTo(6, 6);
+            ctx.lineTo(0, 4);
+            ctx.lineTo(-6, 6);
+            ctx.fill();
+            ctx.restore();
+
+            ctx.fillStyle = isMine ? "#58a6ff" : "#8b949e";
+            ctx.font = "10px sans-serif";
+            const label = s.displayName || s.teamName || "Unknown";
+            ctx.fillText(label, x - ctx.measureText(label).width / 2, y + 28);
+          });
+
+          if (this.targetReticle) {
+            const age = now - this.targetReticle.time;
+            if (age < 1000) {
+              const x = this.targetReticle.x * this.scale;
+              const y = this.targetReticle.y * this.scale;
+              const size = 20 - age / 50;
+              ctx.strokeStyle = `rgba(88, 166, 255, ${1 - age / 1000})`;
+              ctx.beginPath();
+              ctx.moveTo(x - size, y);
+              ctx.lineTo(x + size, y);
+              ctx.moveTo(x, y - size);
+              ctx.lineTo(x, y + size);
+              ctx.stroke();
+            } else {
+              this.targetReticle = null;
+            }
+          }
+        },
+      };
+
+      function loopRender() {
+        renderer.draw();
+        requestAnimationFrame(loopRender);
       }
+
+      window.switchTab = (tab, ev) => {
+        document
+          .querySelectorAll(".tab-btn")
+          .forEach((b) => b.classList.remove("active"));
+        if (ev && ev.target) {
+          ev.target.classList.add("active");
+        }
+        $("tab-login").classList.add("hidden");
+        $("tab-register").classList.add("hidden");
+        $("tab-" + tab).classList.remove("hidden");
+      };
+
+      $("worldCanvas").oncontextmenu = () => false;
+
+      app.init();
     </script>
   </body>
 </html>

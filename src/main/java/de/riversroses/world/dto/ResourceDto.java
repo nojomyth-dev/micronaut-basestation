@@ -6,9 +6,9 @@ import io.micronaut.serde.annotation.Serdeable;
 @Serdeable
 @Introspected
 public record ResourceDto(
-    String id,
-    String type,
-    Integer value,
-    Double x,
-    Double y
-) {}
+        String id,
+        String type,
+        Integer value,
+        Double x,
+        Double y) {
+}

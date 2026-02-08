@@ -4,7 +4,6 @@ import io.micronaut.core.annotation.Introspected;
 import io.micronaut.serde.annotation.Serdeable;
 import lombok.Builder;
 import lombok.Value;
-
 import java.util.List;
 
 @Value

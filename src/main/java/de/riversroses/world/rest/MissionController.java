@@ -1,7 +1,6 @@
 package de.riversroses.world.rest;
 
 import java.util.List;
-
 import de.riversroses.world.db.WorldRepository;
 import de.riversroses.world.dto.MissionDto;
 import io.micronaut.http.annotation.Controller;
@@ -13,7 +12,6 @@ import lombok.Data;
 @AllArgsConstructor
 @Data
 public class MissionController {
-
   private final WorldRepository worldRepo;
 
   @Get
@@ -24,8 +22,7 @@ public class MissionController {
             m.description(),
             m.target().x(),
             m.target().y(),
-            m.reward(),
-            m.expiresAt().getEpochSecond()))
+            m.reward()))
         .toList();
   }
 }

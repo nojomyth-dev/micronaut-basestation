@@ -1,7 +1,6 @@
 package de.riversroses.world.business;
 
 import java.util.List;
-
 import de.riversroses.kernel.engine.GameProperties;
 import de.riversroses.ship.db.ShipRepository;
 import de.riversroses.ship.dto.ShipMarkerDto;
@@ -20,46 +19,37 @@ import lombok.Data;
 @Introspected
 @Data
 public class WorldSnapshotService {
-
   private final GameProperties props;
   private final WorldRepository worldRepo;
   private final ShipRepository shipRepo;
 
   public WorldSnapshotResponse snapshot() {
-
     List<StationDto> stationDtos = worldRepo.getStations().stream()
         .map(s -> new StationDto(
             s.id(),
             s.position().x(),
             s.position().y(),
-            s.name(),
-            s.allowsRefill(),
-            s.allowsUnload()))
+            s.name()))
         .toList();
-
     List<MissionDto> missionDtos = worldRepo.getMissions().stream()
         .map(m -> new MissionDto(
             m.id(),
             m.description(),
             m.target().x(),
             m.target().y(),
-            m.reward(),
-            m.expiresAt().getEpochSecond()))
+            m.reward()))
         .toList();
-
     List<ResourceDto> resourceDtos = List.of();
-
     List<ShipMarkerDto> shipDtos = shipRepo.getAllShips().stream()
         .map(s -> new ShipMarkerDto(
             s.getShipId(),
+            s.getDisplayName(),
             s.getTeamName(),
             s.getPosition().x(),
             s.getPosition().y(),
             s.getHeadingDeg(),
-            s.getSpeed(),
-            s.getFuel()))
+            s.getSpeed()))
         .toList();
-
     return new WorldSnapshotResponse(
         props.getWorld().getWidth(),
         props.getWorld().getHeight(),

@@ -6,16 +6,10 @@ game:
     enabled: true
     periodMs: 50
   
-  physics:
-    fuelPerSecondAtSpeed1: 0.05
-    minSpeed: 0
-    maxSpeed: 500
-    respawnFuel: 800
-
   world:
     width: 1000
     height: 1000
-    nodes-on-map: 30
+    nodes-on-map: 100
     ores:
       iron:
         weight: 100
@@ -28,11 +22,8 @@ game:
         value: 200
 
       cratecredits:
-        weight: 10
-        value: 500 # grant 500 credits
-      cratefuel:
-        weight: 15
-        value: 300 # grant 300 fuel
+        weight: 1
+        value: 1500
 
   depots:
     - { id: "d1", x: 200, y: 200, costPerFuel: 0.05, name: "North Outpost" }

@@ -1,7 +1,6 @@
 package de.riversroses.world.business;
 
 import java.util.List;
-
 import de.riversroses.kernel.engine.GameProperties;
 import de.riversroses.ship.db.ShipRepository;
 import de.riversroses.ship.model.Ship;
@@ -15,30 +14,22 @@ import lombok.Data;
 @AllArgsConstructor
 @Data
 public class ScannerService {
-
   private final ShipRepository shipRepo;
   private final WorldRepository worldRepo;
   private final GameProperties props;
+  private final MissionService missionService;
 
   public ScanResult performScan(Ship ship, double requestedRadius) {
     double maxR = props.getScan().getMaxRadius();
     double actualRadius = Math.max(10.0, Math.min(maxR, requestedRadius));
-
-    double cost = props.getScan().getBaseCost() + (actualRadius * props.getScan().getCostPerRadiusUnit());
-    if (ship.getFuel() < cost) {
-      return ScanResult.empty(); // not enough fuel, punish them for not checking
-    }
-    ship.setFuel(ship.getFuel() - cost);
-
     var visibleShips = shipRepo.getAllShips().stream()
         .filter(s -> !s.getShipId().equals(ship.getShipId()))
         .filter(s -> s.getPosition().distanceTo(ship.getPosition()) <= actualRadius)
         .toList();
-
     var visibleResources = worldRepo.getResources().stream()
         .filter(r -> r.position().distanceTo(ship.getPosition()) <= actualRadius)
         .toList();
-
+    missionService.processMissionCompletionsForShip(ship);
     return new ScanResult(visibleShips, visibleResources);
   }
 

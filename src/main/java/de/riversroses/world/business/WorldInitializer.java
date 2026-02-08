@@ -18,40 +18,18 @@ import lombok.extern.slf4j.Slf4j;
 @AllArgsConstructor
 @Introspected
 public class WorldInitializer implements ApplicationEventListener<ServerStartupEvent> {
-
   private final GameProperties props;
   private final WorldRepository worldRepo;
 
   @Override
   public void onApplicationEvent(ServerStartupEvent event) {
     log.info("Initializing World");
-
-    // Prime Station (Home Base)
     worldRepo.registerStation(new Station(
         "prime-base",
         "Prime Station",
         new Vector2(props.getHomeBase().getX(), props.getHomeBase().getY()),
         props.getHomeBase().getRefillRadius(),
-        true,
-        true,
-        1.0,
-        1.0));
-
-    // Depots from config
-    if (props.getDepots() != null) {
-      props.getDepots().forEach(d -> {
-        worldRepo.registerStation(new Station(
-            d.getId(),
-            d.getName(),
-            new Vector2(d.getX(), d.getY()),
-            40.0,
-            false,
-            true,
-            1.1,
-            1.0));
-      });
-    }
-
+        "prime-base"));
     log.info("World initialized with {} stations.", worldRepo.getStations().size());
   }
 }

@@ -7,7 +7,6 @@ import io.micronaut.http.annotation.Get;
 import io.micronaut.serde.annotation.Serdeable;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-
 import java.util.Comparator;
 import java.util.List;
 
@@ -15,7 +14,6 @@ import java.util.List;
 @AllArgsConstructor
 @Data
 public class LeaderboardController {
-
   private final TeamRepository teamRepo;
 
   @Get
@@ -28,5 +26,6 @@ public class LeaderboardController {
   }
 
   @Serdeable
-  public record LeaderboardEntry(String team, long score) {}
+  public record LeaderboardEntry(String team, long score) {
+  }
 }

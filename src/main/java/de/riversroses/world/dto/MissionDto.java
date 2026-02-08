@@ -6,10 +6,9 @@ import io.micronaut.serde.annotation.Serdeable;
 @Serdeable
 @Introspected
 public record MissionDto(
-    String id,
-    String description,
-    double x,
-    double y,
-    int reward,
-    long expiresAtEpoch
-) {}
+                String id,
+                String description,
+                double x,
+                double y,
+                int reward) {
+}

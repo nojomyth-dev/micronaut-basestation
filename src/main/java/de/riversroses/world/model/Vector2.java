@@ -4,7 +4,6 @@ import io.micronaut.serde.annotation.Serdeable;
 
 @Serdeable
 public record Vector2(double x, double y) {
-
     public double distanceTo(Vector2 other) {
         return Math.hypot(this.x - other.x, this.y - other.y);
     }

@@ -4,9 +4,9 @@ import io.micronaut.serde.annotation.Serdeable;
 
 @Serdeable
 public sealed interface DeltaOp permits
-    ShipUpsert,
-    ResourceUpsert,
-    ResourceRemove,
-    MissionUpsert,
-    MissionRemove {
+        ShipUpsert,
+        ResourceUpsert,
+        ResourceRemove,
+        MissionUpsert,
+        MissionRemove {
 }

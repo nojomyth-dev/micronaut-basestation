@@ -6,10 +6,8 @@ import io.micronaut.serde.annotation.Serdeable;
 @Serdeable
 @Introspected
 public record StationDto(
-    String id,
-    double x,
-    double y,
-    String name,
-    boolean allowsRefill,
-    boolean allowsUnload
-) {}
+        String id,
+        double x,
+        double y,
+        String name) {
+}

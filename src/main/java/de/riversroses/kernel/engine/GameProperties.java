@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import io.micronaut.context.annotation.ConfigurationProperties;
 import io.micronaut.core.annotation.Introspected;
 import lombok.AllArgsConstructor;
@@ -20,14 +19,13 @@ import lombok.ToString;
 @Introspected
 @ConfigurationProperties("game")
 public class GameProperties {
-
   private Tick tick = new Tick();
   private Physics physics = new Physics();
   private HomeBase homeBase = new HomeBase();
   private World world = new World();
   private Scan scan = new Scan();
-
-  private List<Depot> depots = new ArrayList<>();
+  private MissionProviders missionProviders = new MissionProviders();
+  private String savePath;
 
   @Data
   @NoArgsConstructor
@@ -45,15 +43,6 @@ public class GameProperties {
   @Introspected
   @ConfigurationProperties("physics")
   public static class Physics {
-    private Double fuelPerSecondAtSpeed1 = 0.05D;
-    private Double fuelPerCargoUnit = 0.02D;
-
-    private Integer minSpeed = 0;
-    private Integer maxSpeed = 500;
-
-    private Double maxFuel = 1000D;
-    private Double respawnFuel = 800D;
-
     private Double collectionRadius = 15.0D;
   }
 
@@ -76,11 +65,8 @@ public class GameProperties {
   public static class World {
     private Double width = 1000D;
     private Double height = 1000D;
-
     private Integer nodesOnMap = 20;
     private Integer missions = 5;
-
-    // Keys are canonical oreIds (use lowercase).
     private Map<String, Ore> ores = new HashMap<>();
   }
 
@@ -90,9 +76,10 @@ public class GameProperties {
   @Introspected
   @ConfigurationProperties("scan")
   public static class Scan {
-    private Double baseCost = 5.0D;
-    private Double costPerRadiusUnit = 0.05D;
+    private Double baseCost = 0.0D;
+    private Double costPerRadiusUnit = 0.0D;
     private Double maxRadius = 800D;
+    private Double missionCompletionRadius = 20.0D;
   }
 
   @Getter
@@ -104,19 +91,15 @@ public class GameProperties {
     private Integer value;
   }
 
-  @Getter
-  @ToString
-  @EqualsAndHashCode
+  @Data
   @NoArgsConstructor
   @AllArgsConstructor
   @Introspected
-  public static class Depot {
-    private String id;
-    private Double x;
-    private Double y;
-    private Double costPerFuel;
-    private String name;
+  @ConfigurationProperties("mission-providers")
+  public static class MissionProviders {
+    private List<String> urls = new ArrayList<>();
+    private Long pollIntervalMs = 5000L;
+    private Long timeoutMs = 2000L;
+    private String completionPath = "/missions/complete";
   }
-
-  private String savePath;
 }

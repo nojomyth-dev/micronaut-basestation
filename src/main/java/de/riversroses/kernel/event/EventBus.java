@@ -3,7 +3,6 @@ package de.riversroses.kernel.event;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
-
 import jakarta.inject.Singleton;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -12,7 +11,6 @@ import lombok.Data;
 @AllArgsConstructor
 @Data
 public class EventBus {
-
   private final List<Consumer<DomainEvent>> listeners = new CopyOnWriteArrayList<>();
 
   public void publish(DomainEvent event) {

@@ -14,7 +14,6 @@ import lombok.Data;
 @AllArgsConstructor
 @Data
 public class CommandContext {
-
   public final ShipRepository shipRepo;
   public final TeamRepository teamRepo;
   public final WorldRepository worldRepo;

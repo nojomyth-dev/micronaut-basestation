@@ -9,7 +9,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 import java.util.function.Function;
-
 import de.riversroses.infra.error.DomainException;
 import jakarta.inject.Singleton;
 import jakarta.validation.ConstraintViolationException;
@@ -18,12 +17,8 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 @Slf4j
 public class CommandBus {
-
   private final Queue<Command<?>> queue = new ConcurrentLinkedQueue<>();
 
-  /**
-   * Fire-and-forget command executed on the tick thread.
-   */
   public void queue(String name, Consumer<CommandContext> action) {
     queue.offer(new Command<>(name, ctx -> {
       action.accept(ctx);
@@ -31,9 +26,6 @@ public class CommandBus {
     }, null));
   }
 
-  /**
-   * Fire-and-forget command executed on the tick thread.
-   */
   public void submitVoid(String name, Function<CommandContext, ?> action) {
     queue.offer(new Command<>(name, ctx -> {
       action.apply(ctx);
@@ -41,14 +33,9 @@ public class CommandBus {
     }, null));
   }
 
-  /**
-   * Request/response command executed on the tick thread.
-   * The caller blocks until tick processes it (or timeout).
-   */
   public <T> T submitAndWait(String name, Function<CommandContext, T> action, long timeoutMs) {
     CompletableFuture<T> future = new CompletableFuture<>();
     queue.offer(new Command<>(name, action, future));
-
     try {
       return future.get(timeoutMs, TimeUnit.MILLISECONDS);
     } catch (TimeoutException te) {
@@ -56,12 +43,10 @@ public class CommandBus {
       throw new IllegalStateException("Command execution timed out: " + name, te);
     } catch (ExecutionException ee) {
       Throwable cause = ee.getCause();
-
       if (cause instanceof RuntimeException re)
         throw re;
       if (cause instanceof Error err)
         throw err;
-
       throw new IllegalStateException("Command execution failed: " + name, cause);
     } catch (InterruptedException ie) {
       Thread.currentThread().interrupt();
@@ -69,13 +54,9 @@ public class CommandBus {
     }
   }
 
-  /**
-   * Called by the tick thread. Executes queued commands and completes futures.
-   */
   public void processAll(CommandContext ctx) {
     int limit = 5000;
     Command<?> cmd;
-
     while (limit-- > 0 && (cmd = queue.poll()) != null) {
       try {
         Object result = cmd.action.apply(ctx);
@@ -88,7 +69,6 @@ public class CommandBus {
         } else {
           log.warn("Command failed: {}", cmd.name, t);
         }
-
         if (cmd.future != null) {
           cmd.future.completeExceptionally(t);
         }

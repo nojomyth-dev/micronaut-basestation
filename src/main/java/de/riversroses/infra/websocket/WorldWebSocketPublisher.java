@@ -3,7 +3,6 @@ package de.riversroses.infra.websocket;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
-
 import de.riversroses.kernel.event.DomainEvent;
 import de.riversroses.kernel.event.EventBus;
 import de.riversroses.world.event.WorldDeltaEvent;
@@ -22,13 +21,10 @@ import lombok.Data;
 @Singleton
 @Data
 public class WorldWebSocketPublisher {
-
   private final EventBus eventBus;
   private final WebSocketBroadcaster broadcaster;
   private final ExecutorService ioExecutor;
-
   private static final Predicate<WebSocketSession> ALL_SESSIONS = s -> true;
-
   private Consumer<DomainEvent> handler;
 
   public WorldWebSocketPublisher(
